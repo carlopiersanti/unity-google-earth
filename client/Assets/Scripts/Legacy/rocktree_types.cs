@@ -66,19 +66,24 @@ public class rocktree_t
 		public Matrix4x4 matrix_globe_from_mesh = new Matrix4x4();
 		public class mesh_t
 		{
-			public vertex_t[] vertices;
+			//public vertex_t[] vertices;
 			public UInt16[] indices;
 			public Vector2 uv_offset;
 			public Vector2 uv_scale;
 
-			public byte[] texture;
+			public byte[] texture_Data;
 			public texture_format texture_format;
 			public int texture_width;
 			public int texture_height;
 
-            UnityEngine.Mesh mesh_buffer;
-			Texture2D texture_buffer;
+			public UnityEngine.Vector3[] mesh_positions;
+			public UnityEngine.Vector2[] mesh_texCoords;
+			public UnityEngine.Vector2[] octants;
+
 			public bool buffered;
+
+			public UnityEngine.Mesh mesh;
+			public Texture2D texture;
 		};
 		public List<mesh_t> meshes = new List<mesh_t>();
 	};

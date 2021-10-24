@@ -4,14 +4,16 @@ Shader "Custom/TileShader" {
             CGPROGRAM
 
             uniform float4x4 transform;
-            uniform float2 uv_offset;
-            uniform float2 uv_scale;
-            uniform bool octant_mask[8];
+            uniform float uv_offset_x;
+            uniform float uv_offset_y;
+            uniform float uv_scale_x;
+            uniform float uv_scale_y;
+            uniform float octant_mask[8];
             uniform sampler2D maptexture;
 
             struct appdata_t {
                 float3 position   : POSITION;
-                float octant : TEXCOORD0;
+                float2 octant : TEXCOORD0;
                 float2 texcoords : TEXCOORD1;
             };
 
@@ -25,8 +27,8 @@ Shader "Custom/TileShader" {
 
             v2f vert(appdata_t i){
                 v2f o;
-                float mask = octant_mask[int(i.octant)] ? 0.0f : 1.0f;
-                o.v_texcoords = (i.texcoords + uv_offset) * uv_scale * mask;
+                float mask = octant_mask[int(i.octant.x)] ? 0.0f : 1.0f;
+                o.v_texcoords = (i.texcoords + float2(uv_offset_x, uv_offset_y)) * float2(uv_scale_x, uv_scale_y) * mask;
                 o.gl_Position = mul(transform , float4(i.position.xyz, 1.0) )*mask;
                 return o;
             }

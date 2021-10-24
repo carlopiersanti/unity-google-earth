@@ -34,16 +34,16 @@ public class rocktree_decoder
 	{
 		public byte x, y, z; // position
 		public byte w;       // octant mask
-		public byte u, v;   // texture coordinates
+		public UInt16 u, v;   // texture coordinates
 	};
 
 
 
 	// unpackVertices unpacks vertices XYZ to new 8-byte-per-vertex array
-	public static vertex_t[] unpackVertices(byte[] packed)
+	public static UnityEngine.Vector3[] unpackVertices(byte[] packed)
 	{
 		int count = packed.Length / 3;
-		vertex_t[] vertices = new vertex_t[count];
+		UnityEngine.Vector3[] vertices = new UnityEngine.Vector3[count];
 		byte x = 0, y = 0, z = 0; // 8 bit for % 0x100
 		for (int i = 0; i < count; i++)
 		{
@@ -55,25 +55,28 @@ public class rocktree_decoder
 	}
 
 	// unpackTexCoords unpacks texture coordinates UV to 8-byte-per-vertex-array
-	public static void unpackTexCoords(byte[] packed, vertex_t[] vertices, ref Vector2 uv_offset, ref Vector2 uv_scale)
+	public static Vector2[] unpackTexCoords(byte[] packed, int verticesLength, ref Vector2 uv_offset, ref Vector2 uv_scale)
 	{
+		Vector2[] returnValue = new Vector2[verticesLength];
 		int dataIndex = 0;
-		int count = vertices.Length;
+		int count = verticesLength;
 		UInt16 u_mod = (UInt16)((UInt16)1 + Tools.UnpackBytes(packed[0], packed[1]));
 		UInt16 v_mod = (UInt16)((UInt16)1 + Tools.UnpackBytes(packed[2], packed[3]));
 		dataIndex += 4;
 		int vtxIndex = 0;
-		byte u = 0, v = 0;
+		UInt16 u = 0, v = 0;
 		for (int i = 0; i < count; i++)
 		{
-			vertices[i].u = u = (byte)(u + Tools.UnpackBytes(packed[dataIndex + count * 0 + i],packed[dataIndex + count * 2 + i]) % u_mod);
-			vertices[i].v = v = (byte)(v + Tools.UnpackBytes(packed[dataIndex + count * 1 + i],packed[dataIndex + count * 3 + i]) % v_mod);
+			returnValue[i].x = u = (UInt16)(u + Tools.UnpackBytes(packed[dataIndex + count * 0 + i],packed[dataIndex + count * 2 + i]) % u_mod);
+			returnValue[i].y = v = (UInt16)(v + Tools.UnpackBytes(packed[dataIndex + count * 1 + i],packed[dataIndex + count * 3 + i]) % v_mod);
 		}
 
 		uv_offset.x = 0.5f;
 		uv_offset.y = 0.5f;
 		uv_scale[0] = 1.0f / u_mod;
 		uv_scale[1] = 1.0f / v_mod;
+
+		return returnValue;
 	}
 
 	// unpackIndices unpacks indices to triangle strip
@@ -95,8 +98,10 @@ public class rocktree_decoder
 	}
 
 	// unpackOctantMaskAndOctantCountsAndLayerBounds unpacks the octant mask for vertices (W) and layer bounds and octant counts
-	public static void unpackOctantMaskAndOctantCountsAndLayerBounds(byte[] packed, UInt16[] indices, vertex_t[] vertices, int[] layer_bounds)
+	public static Vector2[] unpackOctantMaskAndOctantCountsAndLayerBounds(byte[] packed, UInt16[] indices, int verticesLength, int[] layer_bounds)
 	{
+		Vector2[] returnValue = new Vector2[verticesLength];
+
 		// todo: octant counts
 		int offset = 0;
 		int len = unpackVarInt(packed, ref offset);
@@ -119,14 +124,16 @@ public class rocktree_decoder
 				if (!(0 <= idx && idx < indices.Length))
 					throw new Exception("INTERNAL ERROR");
 				int vtx_i = idx;
-				if (!(0 <= vtx_i && vtx_i < vertices.Length))
+				if (!(0 <= vtx_i && vtx_i < verticesLength))
 					throw new Exception("INTERNAL ERROR");
-				(vertices)[vtx_i].w = (byte)(i & 7);
+				returnValue[vtx_i].x = (byte)(i & 7);
 			}
 			k += v;
 		}
 
 		for (; 10 > m; m++) layer_bounds[m] = k;
+
+		return returnValue;
 	}
 
 	// unpackForNormals unpacks normals info for later mesh normals usage
@@ -278,7 +285,7 @@ public class rocktree_decoder
 		StringBuilder stringBuilder = new StringBuilder(level);
 		for (int i = 0; i < level; i++)
 		{
-			stringBuilder[i] = (char)('0' + (path_id & 7));
+			stringBuilder.Append((char)('0' + (path_id & 7)));
 			path_id >>= 3;
 		}
 		path = stringBuilder.ToString();

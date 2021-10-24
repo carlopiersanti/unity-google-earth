@@ -91,9 +91,9 @@ public class rocktree_ex
 			rocktree_t.node_t.mesh_t m = new rocktree_t.node_t.mesh_t();
 
 			m.indices = rocktree_decoder.unpackIndices(mesh.Indices.ToByteArray());
-			m.vertices = rocktree_decoder.unpackVertices(mesh.Vertices.ToByteArray());
+			m.mesh_positions = rocktree_decoder.unpackVertices(mesh.Vertices.ToByteArray());
 
-			rocktree_decoder.unpackTexCoords(mesh.TextureCoordinates.ToByteArray(), m.vertices, ref m.uv_offset, ref m.uv_scale);
+			m.mesh_texCoords = rocktree_decoder.unpackTexCoords(mesh.TextureCoordinates.ToByteArray(), m.mesh_positions.Length, ref m.uv_offset, ref m.uv_scale);
 			if (mesh.UvOffsetAndScale.Count == 4)
 			{
 				m.uv_offset[0] = mesh.UvOffsetAndScale[0];
@@ -108,7 +108,7 @@ public class rocktree_ex
 			}
 
 			int[] layer_bounds = new int[10];
-			rocktree_decoder.unpackOctantMaskAndOctantCountsAndLayerBounds(mesh.LayerAndOctantCounts.ToByteArray(), m.indices, m.vertices, layer_bounds);
+			m.octants = rocktree_decoder.unpackOctantMaskAndOctantCountsAndLayerBounds(mesh.LayerAndOctantCounts.ToByteArray(), m.indices, m.mesh_positions.Length, layer_bounds);
 			if (!(0 <= layer_bounds[3] && layer_bounds[3] <= m.indices.Length))
 				throw new System.Exception("INTERNAL ERROR");
 
@@ -143,7 +143,7 @@ public class rocktree_ex
 				byte[] managedArray = new byte[width * height * comp];
 				Marshal.Copy(pinnedPixels, managedArray, 0, width * height * comp);
 				
-				m.texture = managedArray;
+				m.texture_Data = managedArray;
 				StbPlugin.export_stbi_image_free(pinnedPixels);
 				m.texture_format = rocktree_t.texture_format.texture_format_rgb;
 
@@ -160,8 +160,8 @@ public class rocktree_ex
 				var dst_size = CrunchPlugin.crn_get_decompressed_size(pinnedSrc.AddrOfPinnedObject(), (uint)src_size, 0);
 				if ( ! (dst_size == ((texture.Width + 3) / 4) * ((texture.Height + 3) / 4) * 8));
 					throw new Exception("INTERNAL ERROR");
-				m.texture = new byte[dst_size];
-				GCHandle pinnedTexture = GCHandle.Alloc(m.texture, GCHandleType.Pinned);
+				m.texture_Data = new byte[dst_size];
+				GCHandle pinnedTexture = GCHandle.Alloc(m.texture_Data, GCHandleType.Pinned);
 				CrunchPlugin.crn_decompress(pinnedSrc.AddrOfPinnedObject(), (uint)src_size, pinnedTexture.AddrOfPinnedObject(), dst_size, 0);
 				m.texture_format = rocktree_t.texture_format.texture_format_dxt1;
 				pinnedTexture.Free();

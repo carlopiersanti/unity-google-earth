@@ -14,16 +14,24 @@ public class main : MonoBehaviour
 
     private void Awake()
     {
-		transform.position = new UnityEngine.Vector3(
+		mainCamera.transform.position = new UnityEngine.Vector3(
 			1329866.230289f,
 			-4643494.267515f,
 			4154677.131562f
 			);
 
-		transform.LookAt(new UnityEngine.Vector3(
+		mainCamera.transform.LookAt(new UnityEngine.Vector3(
 			0.219862f, 0.419329f, 0.312226f
-			), transform.position.normalized);
-    }
+			), mainCamera.transform.position.normalized);
+
+		loadPlanet();
+
+	}
+
+    private void Update()
+    {
+		drawPlanet();
+	}
 
     void loadPlanet()
     {
@@ -78,12 +86,12 @@ public class main : MonoBehaviour
 		//static Vector3d eye = (ecef_norm * (planet_radius + 10000));
 
 		// up is the vec from the planetoid's center towards the sky
-		var up = transform.position.normalized;
+		var up = mainCamera.transform.position.normalized;
 
 		// projection
 		//float aspect_ratio = (float)width / (float)height;
 		//float fov = 0.25f * (float)M_PI;
-		var altitude = UnityEngine.Vector3.Magnitude(transform.position) - planet_radius;
+		var altitude = UnityEngine.Vector3.Magnitude(mainCamera.transform.position) - planet_radius;
 		var horizon = Mathf.Sqrt(altitude * (2 * planet_radius + altitude));
 		var near = horizon > 370000 ? altitude / 2 : 50;
 		var far = horizon;
@@ -208,10 +216,10 @@ public class main : MonoBehaviour
 					{
 						var t = UnityEngine.Matrix4x4.identity;
 						UnityEngine.Vector3 sub = new UnityEngine.Vector3(
-							transform.position.x - (float)node.obb.center.mat[0,0],
-							transform.position.y - (float)node.obb.center.mat[1, 0],
-							transform.position.z - (float)node.obb.center.mat[2, 0]);
-						UnityEngine.Vector3 translation = transform.position + UnityEngine.Vector3.Magnitude(sub) * transform.forward;
+							mainCamera.transform.position.x - (float)node.obb.center.mat[0,0],
+							mainCamera.transform.position.y - (float)node.obb.center.mat[1, 0],
+							mainCamera.transform.position.z - (float)node.obb.center.mat[2, 0]);
+						UnityEngine.Vector3 translation = mainCamera.transform.position + UnityEngine.Vector3.Magnitude(sub) * mainCamera.transform.forward;
 						t.SetColumn(3, new UnityEngine.Vector4(translation.x, translation.y, translation.z, 1));
 						var m = viewprojection * t;
 						var s = m.m33;
@@ -346,17 +354,37 @@ public class main : MonoBehaviour
 			if (mask_map[full_path] == 0xff) continue;
 
 			// float transform matrix
-			/*Matrix4d transform = viewprojection * node->matrix_globe_from_mesh;
-			UnityEngine.Matrix4x4 transform_float;
-			for (auto i = 0; i < 16; ++i) transform_float.data()[i] = (float)(transform.data()[i]);*/
+			Matrix4x4 viewprojectiond = new Matrix4x4(viewprojection);
+			Matrix tiletransform = (Matrix)viewprojectiond * (Matrix)node.matrix_globe_from_mesh;
+			UnityEngine.Matrix4x4 transform_float = new UnityEngine.Matrix4x4();
+			{
+				transform_float.m00 = (float)tiletransform.mat[0, 0];
+				transform_float.m01 = (float)tiletransform.mat[0, 1];
+				transform_float.m02 = (float)tiletransform.mat[0, 2];
+				transform_float.m03 = (float)tiletransform.mat[0, 3];
+
+				transform_float.m10 = (float)tiletransform.mat[1, 0];
+				transform_float.m11 = (float)tiletransform.mat[1, 1];
+				transform_float.m12 = (float)tiletransform.mat[1, 2];
+				transform_float.m13 = (float)tiletransform.mat[1, 3];
+
+				transform_float.m20 = (float)tiletransform.mat[2, 0];
+				transform_float.m21 = (float)tiletransform.mat[2, 1];
+				transform_float.m22 = (float)tiletransform.mat[2, 2];
+				transform_float.m23 = (float)tiletransform.mat[2, 3];
+
+				transform_float.m30 = (float)tiletransform.mat[3, 0];
+				transform_float.m31 = (float)tiletransform.mat[3, 1];
+				transform_float.m32 = (float)tiletransform.mat[3, 2];
+				transform_float.m33 = (float)tiletransform.mat[3, 3];
+			}
 
 			// buffer, bind, draw
-			/*for (auto & mesh : node->meshes)
+			foreach (var mesh in node.meshes)
 			{
-						glUniformMatrix4fv(ctx.transform_loc, 1, GL_FALSE, transform_float.data());
-						if (!mesh.buffered) bufferMesh(mesh);
-				bindAndDrawMesh(mesh, mask_map[full_path], ctx);
-			}*/
+				if (!mesh.buffered) rocktree_gl.bufferMesh(mesh);
+				rocktree_gl.bindAndDrawMesh(tileMaterial, mesh, transform_float, mask_map[full_path]);
+			}
 			//bufs[full_path] = node;
 		}
 	}
