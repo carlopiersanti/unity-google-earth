@@ -71,8 +71,8 @@ public class rocktree_t
 			public Vector2 uv_offset;
 			public Vector2 uv_scale;
 
-			List<byte> texture = new List<byte>();
-			texture_format texture_format;
+			public byte[] texture;
+			public texture_format texture_format;
 			public int texture_width;
 			public int texture_height;
 

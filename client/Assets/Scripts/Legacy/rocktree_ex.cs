@@ -2,6 +2,7 @@ using GeoGlobetrotterProtoRocktree;
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Runtime.InteropServices;
 using UnityEngine;
 using static rocktree_t;
 
@@ -124,33 +125,54 @@ public class rocktree_ex
 			var tex = texture.Data[0];
 
 			// maybe: keep compressed in memory?
-			/*if (texture.format() == Texture_Format_JPG)
+			if (texture.Format == GeoGlobetrotterProtoRocktree.Texture.Types.Format.Jpg)
 			{
-				auto data = (uint8_t*)tex.data();
+				var data = tex.ToByteArray();
 				int width, height, comp;
-				unsigned char* pixels = stbi_load_from_memory(&data[0], tex.size(), &width, &height, &comp, 0);
-				assert(pixels != NULL);
-				assert(width == texture.width() && height == texture.height() && comp == 3);
-				m.texture = std::vector<uint8_t>(pixels, pixels + width * height * comp);
-				stbi_image_free(pixels);
-				m.texture_format = rocktree_t::texture_format_rgb;
+				GCHandle pinnedData = GCHandle.Alloc(data, GCHandleType.Pinned);
+				GCHandle pinnedWidth = GCHandle.Alloc(width, GCHandleType.Pinned);
+				GCHandle pinnedHeight = GCHandle.Alloc(height, GCHandleType.Pinned);
+				GCHandle pinnedComp = GCHandle.Alloc(comp, GCHandleType.Pinned);
+
+				IntPtr pinnedPixels = StbPlugin.export_stbi_load_from_memory(pinnedData.AddrOfPinnedObject(), tex.Length, pinnedWidth.AddrOfPinnedObject(), pinnedHeight.AddrOfPinnedObject(), pinnedComp.AddrOfPinnedObject(), 0);
+				if (pinnedPixels == null)
+					throw new Exception("INTERNAL ERROR");
+				if (!(width == texture.Width && height == texture.Height && comp == 3))
+					throw new Exception("INTERNAL ERROR");
+
+				byte[] managedArray = new byte[width * height * comp];
+				Marshal.Copy(pinnedPixels, managedArray, 0, width * height * comp);
+				
+				m.texture = managedArray;
+				StbPlugin.export_stbi_image_free(pinnedPixels);
+				m.texture_format = rocktree_t.texture_format.texture_format_rgb;
+
+				pinnedData.Free();
+				pinnedWidth.Free();
+				pinnedHeight.Free();
+				pinnedComp.Free();
 			}
-			else if (texture.format() == Texture_Format_CRN_DXT1)
+			else if (texture.Format == GeoGlobetrotterProtoRocktree.Texture.Types.Format.CrnDxt1)
 			{
-				auto src_size = tex.size();
-				auto src = (uint8_t*)tex.data();
-				auto dst_size = crn_get_decompressed_size(src, src_size, 0);
-				assert(dst_size == ((texture.width() + 3) / 4) * ((texture.height() + 3) / 4) * 8);
-				m.texture = std::vector<uint8_t>(dst_size);
-				crn_decompress(src, src_size, m.texture.data(), dst_size, 0);
-				m.texture_format = rocktree_t::texture_format_dxt1;
+				var src_size = tex.Length;
+				var src = tex.ToByteArray();
+				GCHandle pinnedSrc = GCHandle.Alloc(src, GCHandleType.Pinned);
+				var dst_size = CrunchPlugin.crn_get_decompressed_size(pinnedSrc.AddrOfPinnedObject(), (uint)src_size, 0);
+				if ( ! (dst_size == ((texture.Width + 3) / 4) * ((texture.Height + 3) / 4) * 8));
+					throw new Exception("INTERNAL ERROR");
+				m.texture = new byte[dst_size];
+				GCHandle pinnedTexture = GCHandle.Alloc(m.texture, GCHandleType.Pinned);
+				CrunchPlugin.crn_decompress(pinnedSrc.AddrOfPinnedObject(), (uint)src_size, pinnedTexture.AddrOfPinnedObject(), dst_size, 0);
+				m.texture_format = rocktree_t.texture_format.texture_format_dxt1;
+				pinnedTexture.Free();
+				pinnedSrc.Free();
 			}
 			else
 			{
-				fprintf(stderr, "unsupported texture format: %d\n", texture.format());
-				abort();
-			}*/
-
+				Debug.LogError("unsupported texture format: " + texture.Format );
+				throw new Exception("INTERNAL ERROR");
+			}
+			
 			m.texture_width = (int)texture.Width;
 			m.texture_height = (int)texture.Height;
 

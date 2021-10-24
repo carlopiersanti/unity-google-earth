@@ -5,28 +5,22 @@ VisualStudioVersion = 16.0.30907.101
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "crn-unity-plugin", "crn\crn-unity-plugin.vcxproj", "{AF745B42-F996-49EB-859B-970A671DEF5E}"
 EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "stb-unity-plugin", "stb\stb-unity-plugin.vcxproj", "{81E84DA9-BE6D-4146-B248-F319B930D1A9}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
-		Debug_DLL|x64 = Debug_DLL|x64
-		Debug_DLL|x86 = Debug_DLL|x86
-		Debug|x64 = Debug|x64
-		Debug|x86 = Debug|x86
 		Release_DLL|x64 = Release_DLL|x64
 		Release_DLL|x86 = Release_DLL|x86
-		Release|x64 = Release|x64
-		Release|x86 = Release|x86
 	EndGlobalSection
 	GlobalSection(ProjectConfigurationPlatforms) = postSolution
-		{AF745B42-F996-49EB-859B-970A671DEF5E}.Debug_DLL|x64.ActiveCfg = Release_DLL|x64
-		{AF745B42-F996-49EB-859B-970A671DEF5E}.Debug_DLL|x86.ActiveCfg = Release_DLL|Win32
-		{AF745B42-F996-49EB-859B-970A671DEF5E}.Debug|x64.ActiveCfg = Release_DLL|x64
-		{AF745B42-F996-49EB-859B-970A671DEF5E}.Debug|x86.ActiveCfg = Release_DLL|Win32
 		{AF745B42-F996-49EB-859B-970A671DEF5E}.Release_DLL|x64.ActiveCfg = Release_DLL|x64
 		{AF745B42-F996-49EB-859B-970A671DEF5E}.Release_DLL|x64.Build.0 = Release_DLL|x64
 		{AF745B42-F996-49EB-859B-970A671DEF5E}.Release_DLL|x86.ActiveCfg = Release_DLL|Win32
 		{AF745B42-F996-49EB-859B-970A671DEF5E}.Release_DLL|x86.Build.0 = Release_DLL|Win32
-		{AF745B42-F996-49EB-859B-970A671DEF5E}.Release|x64.ActiveCfg = Release_DLL|x64
-		{AF745B42-F996-49EB-859B-970A671DEF5E}.Release|x86.ActiveCfg = Release_DLL|Win32
+		{81E84DA9-BE6D-4146-B248-F319B930D1A9}.Release_DLL|x64.ActiveCfg = Release_DLL|x64
+		{81E84DA9-BE6D-4146-B248-F319B930D1A9}.Release_DLL|x64.Build.0 = Release_DLL|x64
+		{81E84DA9-BE6D-4146-B248-F319B930D1A9}.Release_DLL|x86.ActiveCfg = Release_DLL|Win32
+		{81E84DA9-BE6D-4146-B248-F319B930D1A9}.Release_DLL|x86.Build.0 = Release_DLL|Win32
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

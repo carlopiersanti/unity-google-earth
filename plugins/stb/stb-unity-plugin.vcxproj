@@ -11,8 +11,8 @@
     </ProjectConfiguration>
   </ItemGroup>
   <PropertyGroup Label="Globals">
-    <ProjectName>crn-unity-plugin</ProjectName>
-    <ProjectGuid>{AF745B42-F996-49EB-859B-970A671DEF5E}</ProjectGuid>
+    <ProjectName>stb-unity-plugin</ProjectName>
+    <ProjectGuid>{81E84DA9-BE6D-4146-B248-F319B930D1A9}</ProjectGuid>
     <RootNamespace>comp</RootNamespace>
     <Keyword>Win32Proj</Keyword>
     <WindowsTargetPlatformVersion>10.0</WindowsTargetPlatformVersion>
@@ -51,7 +51,7 @@
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release_DLL|x64'">
     <IntDir>$(Platform)\$(Configuration)\</IntDir>
     <LinkIncremental>false</LinkIncremental>
-    <OutDir>$(SolutionDir)\..\client\Assets\ThirdParty\crunch\Plugins\$(Platform)\</OutDir>
+    <OutDir>$(SolutionDir)\..\client\Assets\ThirdParty\stb\Plugins\$(Platform)\</OutDir>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release_DLL|Win32'">
     <ClCompile>
@@ -114,13 +114,10 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include="crn.cc" />
+    <ClCompile Include="stb.cc" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="crn.h" />
-    <ClInclude Include="crnlib.h" />
-    <ClInclude Include="crn_decomp.h" />
-    <ClInclude Include="dds_defs.h" />
+    <ClInclude Include="stb_image.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
