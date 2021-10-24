@@ -7,9 +7,10 @@ using UnityEngine;
 
 public class main : MonoBehaviour
 {
-	[SerializeField] public Camera camera;
+	[SerializeField] public Camera mainCamera;
+	[SerializeField] public Material tileMaterial;
 
-    static rocktree_t _planetoid = null;
+	static rocktree_t _planetoid = null;
 
     private void Awake()
     {
@@ -88,9 +89,9 @@ public class main : MonoBehaviour
 		var far = horizon;
 		if (near >= far) near = far - 1;
 		if (float.IsNaN(far) || far < near) far = near + 1;
-		camera.nearClipPlane = near;
-		camera.farClipPlane = far;
-		projection = camera.projectionMatrix;
+		mainCamera.nearClipPlane = near;
+		mainCamera.farClipPlane = far;
+		projection = mainCamera.projectionMatrix;
 
 		// rotation
 		/*int mouse_x, mouse_y;
@@ -129,7 +130,7 @@ public class main : MonoBehaviour
 		}
 
 		auto view = lookAt(eye, eye + direction, up);*/
-		viewprojection = projection * camera.worldToCameraMatrix;
+		viewprojection = projection * mainCamera.worldToCameraMatrix;
 
 		var frustum_planes = rocktree_math.getFrustumPlanes(viewprojection); // for obb culling
 		List<Tuple<string, rocktree_t.bulk_t>> valid = new List<Tuple<string, rocktree_t.bulk_t>> { new Tuple<string, rocktree_t.bulk_t>("",current_bulk) };
