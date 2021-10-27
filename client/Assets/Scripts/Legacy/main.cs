@@ -3,6 +3,7 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
+using System.Net;
 using UnityEngine;
 
 public class main : MonoBehaviour
@@ -14,6 +15,8 @@ public class main : MonoBehaviour
 
     private void Awake()
     {
+		ServicePointManager.DefaultConnectionLimit = 20000;
+
 		mainCamera.transform.position = new UnityEngine.Vector3(
 			1329866.230289f,
 			-4643494.267515f,
