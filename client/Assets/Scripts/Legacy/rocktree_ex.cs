@@ -42,7 +42,7 @@ public class rocktree_ex
 				Debug.LogError("skip unknown node\n");
 			}
 
-			if ((has_data || !((aux.flags & (int)NodeMetadata.Types.Flags.Leaf) == 0)) && node_meta.HasOrientedBoundingBox)
+			if ((has_data || (aux.flags & (int)NodeMetadata.Types.Flags.Leaf) == 0) && node_meta.HasOrientedBoundingBox)
 			{
 				var meters_per_texel = node_meta.HasMetersPerTexel
 					? node_meta.MetersPerTexel

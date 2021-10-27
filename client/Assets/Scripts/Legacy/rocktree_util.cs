@@ -49,7 +49,7 @@ public class rocktree_util
 	public static NodeDataRequest createNodeDataRequest(string base_path, BulkMetadata bulk, NodeMetadata node_meta)
 	{
 		var aux = rocktree_decoder.unpackPathAndFlags(node_meta);
-		if ( (aux.flags & (int)NodeMetadata.Types.Flags.Nodata) == 0)
+		if ( (aux.flags & (int)NodeMetadata.Types.Flags.Nodata) != 0)
 			throw new Exception("INTERNAL ERROR");
 
 		//assert(node_meta.has_epoch());
