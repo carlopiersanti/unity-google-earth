@@ -7,16 +7,16 @@ public class rocktree_math
 {
 
 	// based on @fabioarnold's impl of "https://fgiesen.wordpress.com/2012/08/31/frustum-planes-from-the-projection-matrix/"
-	public static UnityEngine.Vector4[] getFrustumPlanes(UnityEngine.Matrix4x4 projection)
+	public static Vector4[] getFrustumPlanes(Matrix projection)
 	{
-		UnityEngine.Vector4[] planes = new UnityEngine.Vector4[6]
+		Vector4[] planes = new Vector4[6]
 		{
-			new UnityEngine.Vector4(),
-			new UnityEngine.Vector4(),
-			new UnityEngine.Vector4(),
-			new UnityEngine.Vector4(),
-			new UnityEngine.Vector4(),
-			new UnityEngine.Vector4()
+			new Vector4(),
+			new Vector4(),
+			new Vector4(),
+			new Vector4(),
+			new Vector4(),
+			new Vector4()
 		};
 
 		for (int i = 0; i < 3; ++i)
@@ -37,7 +37,7 @@ public class rocktree_math
 
 
 	// based on @fabioarnold's impl of "Real-Time Collision Detection 5.2.3 Testing Box Against Plane"
-	public static obb_frustum classifyObbFrustum(rocktree_decoder.OrientedBoundingBox obb, UnityEngine.Vector4[] planes)
+	public static obb_frustum classifyObbFrustum(rocktree_decoder.OrientedBoundingBox obb, Vector4[] planes)
 	{
 		obb_frustum result = obb_frustum.obb_frustum_inside;
 		var obb_orientation_t = Matrix.Transpose(obb.orientation);
@@ -45,14 +45,14 @@ public class rocktree_math
 		{
 			var plane4 = planes[i];
 			var plane3 = new Vector3();
-			plane3.mat[0, 0] = plane4.x;
-			plane3.mat[1, 0] = plane4.y;
-			plane3.mat[2, 0] = plane4.z;
+			plane3.mat[0, 0] = plane4.mat[0, 0];
+			plane3.mat[1, 0] = plane4.mat[1, 0];
+			plane3.mat[2, 0] = plane4.mat[2, 0];
 			var mul = (obb_orientation_t * plane3);
 			Matrix abs_plane = Matrix.Abs(mul);
 
 			double r = Matrix.dot( obb.extents, abs_plane);
-			double d = Matrix.dot(obb.center, plane3) + plane4.w;
+			double d = Matrix.dot(obb.center, plane3) + plane4.mat[3, 0];
 
 			if (Math.Abs(d) < r) result = obb_frustum.obb_frustum_intersect;
 			if (d + r < 0.0f) return obb_frustum.obb_frustum_outside;

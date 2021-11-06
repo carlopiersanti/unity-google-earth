@@ -55,6 +55,16 @@ public class Matrix
         mat = new double[rows, cols];
     }
 
+    public Vector4 GetRow(int i)
+    {
+        Vector4 returnvalue = new Vector4();
+        returnvalue.mat[0, 0] = mat[i, 0];
+        returnvalue.mat[1, 0] = mat[i, 1];
+        returnvalue.mat[2, 0] = mat[i, 2];
+        returnvalue.mat[3, 0] = mat[i, 2];
+        return returnvalue;
+    }
+
     public Boolean IsSquare()
     {
         return (rows == cols);

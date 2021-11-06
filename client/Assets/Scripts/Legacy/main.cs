@@ -17,18 +17,7 @@ public class main : MonoBehaviour
     {
 		ServicePointManager.DefaultConnectionLimit = 20000;
 
-		mainCamera.transform.position = new UnityEngine.Vector3(
-			1329866.230289f,
-			-4643494.267515f,
-			4154677.131562f
-			);
-
-		mainCamera.transform.LookAt(new UnityEngine.Vector3(
-			0.219862f, 0.419329f, 0.312226f
-			), mainCamera.transform.position.normalized);
-
 		loadPlanet();
-
 	}
 
     private void Update()
@@ -72,8 +61,6 @@ public class main : MonoBehaviour
 		var current_bulk = planetoid.root_bulk;
 		var planet_radius = planetoid.radius;
 
-		UnityEngine.Matrix4x4 projection, viewprojection;
-
 		int width, height;
 
 		bool key_up_pressed = Input.GetKey( KeyCode.Z );
@@ -83,26 +70,40 @@ public class main : MonoBehaviour
 		bool key_boost_pressed = Input.GetKey(KeyCode.LeftShift) || Input.GetKey(KeyCode.RightShift);
 		bool mouse_pressed = Input.GetMouseButton(1);
 
+		Vector3 eye = new Vector3();
+		eye.mat[0, 0] = 1329866.230289;
+		eye.mat[1, 0] = -4643494.267515;
+		eye.mat[2, 0] = 4154677.131562;
+
+		Vector3 direction = new Vector3();
+		direction.mat[0, 0] = 0.219862;
+		direction.mat[1, 0] = 0.419329;
+		direction.mat[2, 0] = 0.312226;
+
+
 		// from lat/lon
 		//static Vector3d ecef = { ...https://www.oc.nps.edu/oc2902w/coord/llhxyz.htm };
 		//static auto ecef_norm = ecef.normalized();
 		//static Vector3d eye = (ecef_norm * (planet_radius + 10000));
 
 		// up is the vec from the planetoid's center towards the sky
-		var up = mainCamera.transform.position.normalized;
+		var up = new UnityEngine.Vector3((float)eye.mat[0, 0], (float)eye.mat[1, 0], (float)eye.mat[1, 0]);
+		up.Normalize();
+
+		mainCamera.transform.LookAt(new UnityEngine.Vector3((float)direction.mat[0, 0], (float)direction.mat[1, 0], (float)direction.mat[1, 0]), up);
 
 		// projection
 		//float aspect_ratio = (float)width / (float)height;
 		//float fov = 0.25f * (float)M_PI;
-		var altitude = UnityEngine.Vector3.Magnitude(mainCamera.transform.position) - planet_radius;
-		var horizon = Mathf.Sqrt(altitude * (2 * planet_radius + altitude));
+		var altitude = Math.Sqrt(Math.Pow(eye.mat[0, 0], 2) + Math.Pow(eye.mat[1, 0], 2) + Math.Pow(eye.mat[2, 0], 2)) - planet_radius;
+		var horizon = Math.Sqrt(altitude * (2 * planet_radius + altitude));
 		var near = horizon > 370000 ? altitude / 2 : 50;
 		var far = horizon;
 		if (near >= far) near = far - 1;
-		if (float.IsNaN(far) || far < near) far = near + 1;
-		mainCamera.nearClipPlane = near;
-		mainCamera.farClipPlane = far;
-		projection = mainCamera.projectionMatrix;
+		if (double.IsNaN(far) || far < near) far = near + 1;
+		mainCamera.nearClipPlane = (float)near;
+		mainCamera.farClipPlane = (float)far;
+		var projection = UnityEngine.Matrix4x4.Perspective(mainCamera.fieldOfView, mainCamera.aspect, mainCamera.nearClipPlane, mainCamera.farClipPlane);
 
 		// rotation
 		/*int mouse_x, mouse_y;
@@ -141,7 +142,49 @@ public class main : MonoBehaviour
 		}
 
 		auto view = lookAt(eye, eye + direction, up);*/
-		viewprojection = projection * mainCamera.worldToCameraMatrix;
+		Matrix4x4 worldToCamera = new Matrix4x4();
+		worldToCamera.mat[0, 0] = mainCamera.worldToCameraMatrix.m00;
+		worldToCamera.mat[0, 1] = mainCamera.worldToCameraMatrix.m01;
+		worldToCamera.mat[0, 2] = mainCamera.worldToCameraMatrix.m02;
+		worldToCamera.mat[0, 3] = mainCamera.worldToCameraMatrix.m03;
+
+		worldToCamera.mat[1, 0] = mainCamera.worldToCameraMatrix.m10;
+		worldToCamera.mat[1, 1] = mainCamera.worldToCameraMatrix.m11;
+		worldToCamera.mat[1, 2] = mainCamera.worldToCameraMatrix.m12;
+		worldToCamera.mat[1, 3] = mainCamera.worldToCameraMatrix.m13;
+
+		worldToCamera.mat[2, 0] = mainCamera.worldToCameraMatrix.m20;
+		worldToCamera.mat[2, 1] = mainCamera.worldToCameraMatrix.m21;
+		worldToCamera.mat[2, 2] = mainCamera.worldToCameraMatrix.m22;
+		worldToCamera.mat[2, 3] = mainCamera.worldToCameraMatrix.m23;
+
+		worldToCamera.mat[3, 0] = mainCamera.worldToCameraMatrix.m30;
+		worldToCamera.mat[3, 1] = mainCamera.worldToCameraMatrix.m31;
+		worldToCamera.mat[3, 2] = mainCamera.worldToCameraMatrix.m32;
+		worldToCamera.mat[3, 3] = mainCamera.worldToCameraMatrix.m33;
+
+		Matrix4x4 projectionDouble = new Matrix4x4();
+		projectionDouble.mat[0, 0] = projection.m00;
+		projectionDouble.mat[0, 1] = projection.m01;
+		projectionDouble.mat[0, 2] = projection.m02;
+		projectionDouble.mat[0, 3] = projection.m03;
+
+		projectionDouble.mat[1, 0] = projection.m10;
+		projectionDouble.mat[1, 1] = projection.m11;
+		projectionDouble.mat[1, 2] = projection.m12;
+		projectionDouble.mat[1, 3] = projection.m13;
+
+		projectionDouble.mat[2, 0] = projection.m20;
+		projectionDouble.mat[2, 1] = projection.m21;
+		projectionDouble.mat[2, 2] = projection.m22;
+		projectionDouble.mat[2, 3] = projection.m23;
+
+		projectionDouble.mat[3, 0] = projection.m30;
+		projectionDouble.mat[3, 1] = projection.m31;
+		projectionDouble.mat[3, 2] = projection.m32;
+		projectionDouble.mat[3, 3] = projection.m33;
+
+		var viewprojection = (Matrix)projectionDouble * (Matrix)worldToCamera;
 
 		var frustum_planes = rocktree_math.getFrustumPlanes(viewprojection); // for obb culling
 		List<Tuple<string, rocktree_t.bulk_t>> valid = new List<Tuple<string, rocktree_t.bulk_t>> { new Tuple<string, rocktree_t.bulk_t>("",current_bulk) };
@@ -185,7 +228,8 @@ public class main : MonoBehaviour
 				foreach (var o in octs)
 				{
 					var nxt = cur + o;
-					var nxt_rel = nxt.Substring((int)Math.Floor((decimal)(nxt.Length - 1) / 4) * 4, 4);
+					int index = (int)Math.Floor((decimal)(nxt.Length - 1) / 4) * 4;
+					var nxt_rel = nxt.Substring(index, Math.Min(4,nxt.Length-index));
 					if (!bulk.nodes.TryGetValue(nxt_rel, out var node))
 						continue;
 
@@ -217,15 +261,20 @@ public class main : MonoBehaviour
 					}*/
 
 					{
-						var t = UnityEngine.Matrix4x4.identity;
-						UnityEngine.Vector3 sub = new UnityEngine.Vector3(
-							mainCamera.transform.position.x - (float)node.obb.center.mat[0,0],
-							mainCamera.transform.position.y - (float)node.obb.center.mat[1, 0],
-							mainCamera.transform.position.z - (float)node.obb.center.mat[2, 0]);
-						UnityEngine.Vector3 translation = mainCamera.transform.position + UnityEngine.Vector3.Magnitude(sub) * mainCamera.transform.forward;
-						t.SetColumn(3, new UnityEngine.Vector4(translation.x, translation.y, translation.z, 1));
+						var t = new Matrix4x4();
+						var sub = eye - node.obb.center;
+						Matrix translation = eye + Math.Sqrt(Math.Pow(eye.mat[0,0],2) + Math.Pow(eye.mat[1, 0], 2) + Math.Pow(eye.mat[2, 0], 2)) * direction;
+						t.mat[0, 0] = 1;
+						t.mat[1, 1] = 1;
+						t.mat[2, 2] = 1;
+						t.mat[3, 3] = 1;
+
+						t.mat[0, 3] = translation.mat[0, 0];
+						t.mat[1, 3] = translation.mat[1, 0];
+						t.mat[2, 3] = translation.mat[2, 0];
+
 						var m = viewprojection * t;
-						var s = m.m33;
+						var s = m.mat[3,3];
 						var texels_per_meter = 1.0f / node.meters_per_texel;
 						var wh = 768; // width < height ? width : height;
 						var r = (2.0 * (1.0 / s)) * wh;
@@ -357,8 +406,7 @@ public class main : MonoBehaviour
 			if (mask_map[full_path] == 0xff) continue;
 
 			// float transform matrix
-			Matrix4x4 viewprojectiond = new Matrix4x4(viewprojection);
-			Matrix tiletransform = (Matrix)viewprojectiond * (Matrix)node.matrix_globe_from_mesh;
+			Matrix tiletransform = (Matrix)viewprojection * (Matrix)node.matrix_globe_from_mesh;
 			UnityEngine.Matrix4x4 transform_float = new UnityEngine.Matrix4x4();
 			{
 				transform_float.m00 = (float)tiletransform.mat[0, 0];
