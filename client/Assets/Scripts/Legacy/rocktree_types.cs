@@ -122,7 +122,7 @@ public class rocktree_t
 			if (parent != null) parent.busy_ctr.Operation(t => t--);
 		}
 
-		public Vector3 head_node_center;
+		public UnityEngine.Vector3 head_node_center;
 
 		public BulkMetadata _metadata;
 		public Atomic<int> busy_ctr = new Atomic<int>(0);

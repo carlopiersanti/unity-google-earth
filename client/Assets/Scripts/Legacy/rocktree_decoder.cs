@@ -307,7 +307,7 @@ public class rocktree_decoder
 		public Matrix3x3 orientation = new Matrix3x3();
 	};
 
-	public static OrientedBoundingBox unpackObb(byte[] packed, Vector3 head_node_center, float meters_per_texel)
+	public static OrientedBoundingBox unpackObb(byte[] packed, UnityEngine.Vector3 head_node_center, float meters_per_texel)
 	{
 		if (!(packed.Length == 15))
 			throw new Exception("INTERNAL ERROR");
@@ -315,9 +315,9 @@ public class rocktree_decoder
 		byte[] data = packed;
 
 		OrientedBoundingBox obb = new OrientedBoundingBox();
-		obb.center.mat[0,0] = Tools.UnpackBytes(data[0], data[1]) * meters_per_texel + head_node_center.mat[0,0];
-		obb.center.mat[1,0] = Tools.UnpackBytes(data[2], data[3]) * meters_per_texel + head_node_center.mat[1,0];
-		obb.center.mat[2,0] = Tools.UnpackBytes(data[4], data[5]) * meters_per_texel + head_node_center.mat[2,0];
+		obb.center.mat[0,0] = Tools.UnpackBytes(data[0], data[1]) * meters_per_texel + head_node_center.x;
+		obb.center.mat[1,0] = Tools.UnpackBytes(data[2], data[3]) * meters_per_texel + head_node_center.y;
+		obb.center.mat[2,0] = Tools.UnpackBytes(data[4], data[5]) * meters_per_texel + head_node_center.z;
 		obb.extents.mat[0,0] = data[6] * meters_per_texel;
 		obb.extents.mat[1,0] = data[7] * meters_per_texel;
 		obb.extents.mat[2,0] = data[8] * meters_per_texel;

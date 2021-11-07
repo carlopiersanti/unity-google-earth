@@ -5,8 +5,8 @@ using UnityEngine;
 
 public class Tools
 {
-    public static UInt16 UnpackBytes(byte left, byte right)
+    public static Int16 UnpackBytes(byte left, byte right)
     {
-        return (UInt16)(left | right << 8);
+        return (Int16)(left | (right << 8));
     }
 }

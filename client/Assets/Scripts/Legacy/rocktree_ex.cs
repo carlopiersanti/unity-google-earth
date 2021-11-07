@@ -12,10 +12,10 @@ public class rocktree_ex
 	{
 		bulk._metadata = bulk_metadata;
 
-		bulk.head_node_center = new Vector3();
-		bulk.head_node_center.mat[0, 0] = bulk._metadata.HeadNodeCenter[0];
-		bulk.head_node_center.mat[1, 0] = bulk._metadata.HeadNodeCenter[1];
-		bulk.head_node_center.mat[2, 0] = bulk._metadata.HeadNodeCenter[2];
+		bulk.head_node_center = new UnityEngine.Vector3();
+		bulk.head_node_center.x = (float)bulk._metadata.HeadNodeCenter[0];
+		bulk.head_node_center.y = (float)bulk._metadata.HeadNodeCenter[1];
+		bulk.head_node_center.z = (float)bulk._metadata.HeadNodeCenter[2];
 
 		foreach (var node_meta in bulk._metadata.NodeMetadata )
 		{
