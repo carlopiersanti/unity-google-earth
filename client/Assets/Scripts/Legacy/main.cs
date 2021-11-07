@@ -87,10 +87,11 @@ public class main : MonoBehaviour
 		//static Vector3d eye = (ecef_norm * (planet_radius + 10000));
 
 		// up is the vec from the planetoid's center towards the sky
-		var up = new UnityEngine.Vector3((float)eye.mat[0, 0], (float)eye.mat[1, 0], (float)eye.mat[1, 0]);
+		var up = new UnityEngine.Vector3((float)eye.mat[0, 0], (float)eye.mat[1, 0], (float)eye.mat[2, 0]);
 		up.Normalize();
 
-		mainCamera.transform.LookAt(new UnityEngine.Vector3((float)direction.mat[0, 0], (float)direction.mat[1, 0], (float)direction.mat[1, 0]), up);
+		mainCamera.transform.LookAt(new UnityEngine.Vector3((float)(direction.mat[0, 0]), (float)(direction.mat[1, 0]), (float)(direction.mat[2, 0])), up);
+		mainCamera.transform.position = new UnityEngine.Vector3((float)eye.mat[0, 0], (float)eye.mat[1, 0], (float)eye.mat[2, 0]);
 
 		// projection
 		//float aspect_ratio = (float)width / (float)height;
@@ -101,6 +102,7 @@ public class main : MonoBehaviour
 		var far = horizon;
 		if (near >= far) near = far - 1;
 		if (double.IsNaN(far) || far < near) far = near + 1;
+		mainCamera.fieldOfView = 45;
 		mainCamera.nearClipPlane = (float)near;
 		mainCamera.farClipPlane = (float)far;
 		var projection = UnityEngine.Matrix4x4.Perspective(mainCamera.fieldOfView, mainCamera.aspect, mainCamera.nearClipPlane, mainCamera.farClipPlane);
