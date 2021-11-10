@@ -140,45 +140,17 @@ public class main : MonoBehaviour
 
 		auto view = lookAt(eye, eye + direction, up);*/
 
-		UnityEngine.Vector3[] up =
-		{
-			new UnityEngine.Vector3((float)eye.mat[0, 0], (float)eye.mat[1, 0], (float)eye.mat[2, 0]).normalized,     // < This one
-			new UnityEngine.Vector3((float)eye.mat[0, 0], (float)eye.mat[1, 0], -(float)eye.mat[2, 0]).normalized,
-			new UnityEngine.Vector3((float)eye.mat[0, 0], -(float)eye.mat[1, 0], (float)eye.mat[2, 0]).normalized,
-			new UnityEngine.Vector3((float)eye.mat[0, 0], -(float)eye.mat[1, 0], -(float)eye.mat[2, 0]).normalized,
-			new UnityEngine.Vector3(-(float)eye.mat[0, 0], (float)eye.mat[1, 0], (float)eye.mat[2, 0]).normalized,
-			new UnityEngine.Vector3(-(float)eye.mat[0, 0], (float)eye.mat[1, 0], -(float)eye.mat[2, 0]).normalized,
-			new UnityEngine.Vector3(-(float)eye.mat[0, 0], -(float)eye.mat[1, 0], (float)eye.mat[2, 0]).normalized,
-			new UnityEngine.Vector3(-(float)eye.mat[0, 0], -(float)eye.mat[1, 0], -(float)eye.mat[2, 0]).normalized
-		};
+		UnityEngine.Vector3 position =
+			new UnityEngine.Vector3((float)eye.mat[0, 0], (float)eye.mat[1, 0], (float)eye.mat[2, 0]);
 
-		UnityEngine.Vector3[] lookAt =
-		{
-			new UnityEngine.Vector3((float)(direction.mat[0, 0]), (float)(direction.mat[1, 0]), (float)(direction.mat[2, 0])),
-			new UnityEngine.Vector3((float)(direction.mat[0, 0]), (float)(direction.mat[1, 0]), -(float)(direction.mat[2, 0])),
-			new UnityEngine.Vector3((float)(direction.mat[0, 0]), -(float)(direction.mat[1, 0]), (float)(direction.mat[2, 0])),
-			new UnityEngine.Vector3((float)(direction.mat[0, 0]), -(float)(direction.mat[1, 0]), -(float)(direction.mat[2, 0])),
-			new UnityEngine.Vector3(-(float)(direction.mat[0, 0]), (float)(direction.mat[1, 0]), (float)(direction.mat[2, 0])),
-			new UnityEngine.Vector3(-(float)(direction.mat[0, 0]), (float)(direction.mat[1, 0]), -(float)(direction.mat[2, 0])),
-			new UnityEngine.Vector3(-(float)(direction.mat[0, 0]), -(float)(direction.mat[1, 0]), (float)(direction.mat[2, 0])),
-			new UnityEngine.Vector3(-(float)(direction.mat[0, 0]), -(float)(direction.mat[1, 0]), -(float)(direction.mat[2, 0])) // <= This One
-		};
+		UnityEngine.Vector3 up = position.normalized;
 
-		UnityEngine.Vector3[] position =
-		{
-			new UnityEngine.Vector3((float)eye.mat[0, 0], (float)eye.mat[1, 0], (float)eye.mat[2, 0]),
-			new UnityEngine.Vector3((float)eye.mat[0, 0], (float)eye.mat[1, 0], -(float)eye.mat[2, 0]),
-			new UnityEngine.Vector3((float)eye.mat[0, 0], -(float)eye.mat[1, 0], (float)eye.mat[2, 0]),
-			new UnityEngine.Vector3((float)eye.mat[0, 0], -(float)eye.mat[1, 0], -(float)eye.mat[2, 0]),
-			new UnityEngine.Vector3(-(float)eye.mat[0, 0], (float)eye.mat[1, 0], (float)eye.mat[2, 0]),
-			new UnityEngine.Vector3(-(float)eye.mat[0, 0], (float)eye.mat[1, 0], -(float)eye.mat[2, 0]),
-			new UnityEngine.Vector3(-(float)eye.mat[0, 0], -(float)eye.mat[1, 0], (float)eye.mat[2, 0]),
-			new UnityEngine.Vector3(-(float)eye.mat[0, 0], -(float)eye.mat[1, 0], -(float)eye.mat[2, 0])
-		};
+		UnityEngine.Vector3 lookAt = 
+			new UnityEngine.Vector3((float)(direction.mat[0, 0]), (float)(direction.mat[1, 0]), (float)(direction.mat[2, 0]));
 
 		mainCamera.transform.position = UnityEngine.Vector3.zero;
-		mainCamera.transform.LookAt(lookAt[7], up[0]);
-		mainCamera.transform.position = position[0];
+		mainCamera.transform.LookAt(-lookAt, up);
+		mainCamera.transform.position = position;
 		Matrix4x4 view = new Matrix4x4(mainCamera.transform.worldToLocalMatrix);
 		Matrix4x4 projection = new Matrix4x4(projectionUnity);
 
@@ -212,7 +184,8 @@ public class main : MonoBehaviour
 				{
 					var rel = cur.Substring((int)Math.Floor((decimal)(cur.Length - 1) / 4) * 4, 4);
 					var has_bulk = bulk.bulks.TryGetValue(rel, out var b);
-					if (!has_bulk) continue;
+					if (!has_bulk)
+						continue;
 					potential_bulks[cur] = b;
 					if (b.dl_state.Value == dl_state.dl_state_stub)
 					{
@@ -277,7 +250,10 @@ public class main : MonoBehaviour
 						var texels_per_meter = 1.0f / node.meters_per_texel;
 						var wh = 768; // width < height ? width : height;
 						var r = (2.0 * (1.0 / s)) * wh;
-						if (texels_per_meter > r) continue;
+						if (texels_per_meter > r)
+						{
+							continue;
+						}
 					}
 
 					next_valid.Add(new Tuple<string, rocktree_t.bulk_t>(nxt, bulk));
@@ -293,7 +269,7 @@ public class main : MonoBehaviour
 			}
 			if (next_valid.Count == 0) break;
 			valid = next_valid;
-			next_valid.Clear();		
+			next_valid = new List<Tuple<string, rocktree_t.bulk_t>>();
 		}	
 
 		foreach (var kv in potential_nodes)
