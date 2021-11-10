@@ -61,7 +61,7 @@ public class Matrix
         returnvalue.mat[0, 0] = mat[i, 0];
         returnvalue.mat[1, 0] = mat[i, 1];
         returnvalue.mat[2, 0] = mat[i, 2];
-        returnvalue.mat[3, 0] = mat[i, 2];
+        returnvalue.mat[3, 0] = mat[i, 3];
         return returnvalue;
     }
 
