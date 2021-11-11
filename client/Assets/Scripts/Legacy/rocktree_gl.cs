@@ -24,11 +24,14 @@ public class rocktree_gl : MonoBehaviour
 		mesh.mesh = new Mesh();
 		mesh.mesh.bounds = new Bounds(UnityEngine.Vector3.zero, UnityEngine.Vector3.positiveInfinity);
 		mesh.mesh.vertices = mesh.mesh_positions;
+		mesh.mesh.triangles = mesh.indices;
 		mesh.mesh.uv = mesh.octants;
 		mesh.mesh.uv2 = mesh.mesh_texCoords;
+
+		mesh.buffered = true;
 	}
 
-	public static void bindAndDrawMesh(Material material, rocktree_t.node_t.mesh_t mesh, UnityEngine.Matrix4x4 transform_float, byte mask_map)
+	public static void bindAndDrawMesh(Camera camera, Material material, rocktree_t.node_t.mesh_t mesh, UnityEngine.Matrix4x4 transform_float, byte mask_map)
     {
 		MaterialPropertyBlock block = new MaterialPropertyBlock();
 		block.SetMatrix("transform", transform_float);
@@ -38,6 +41,7 @@ public class rocktree_gl : MonoBehaviour
 		block.SetFloat("uv_scale_x", mesh.uv_scale.x);
 		block.SetFloat("uv_scale_y", mesh.uv_scale.y);
 		block.SetTexture("maptexture", mesh.texture);
+
 		Graphics.DrawMesh(mesh.mesh, transform_float, material, 0, null, 0, block,false,false,false);
     }
 

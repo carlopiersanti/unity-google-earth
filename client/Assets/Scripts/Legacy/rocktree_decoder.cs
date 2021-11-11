@@ -80,12 +80,12 @@ public class rocktree_decoder
 	}
 
 	// unpackIndices unpacks indices to triangle strip
-	public static UInt16[] unpackIndices(byte[] packed)
+	public static int[] unpackIndices(byte[] packed)
 	{
 		int offset = 0;
 
 		int triangle_strip_len = unpackVarInt(packed, ref offset);
-		UInt16[] triangle_strip = new UInt16[triangle_strip_len];
+		int[] triangle_strip = new int[triangle_strip_len];
 		int num_non_degenerate_triangles = 0;
 		for (int zeros = 0, a, b = 0, c = 0, i = 0; i < triangle_strip_len; i++)
 		{
@@ -98,7 +98,7 @@ public class rocktree_decoder
 	}
 
 	// unpackOctantMaskAndOctantCountsAndLayerBounds unpacks the octant mask for vertices (W) and layer bounds and octant counts
-	public static Vector2[] unpackOctantMaskAndOctantCountsAndLayerBounds(byte[] packed, UInt16[] indices, int verticesLength, int[] layer_bounds)
+	public static Vector2[] unpackOctantMaskAndOctantCountsAndLayerBounds(byte[] packed, int[] indices, int verticesLength, int[] layer_bounds)
 	{
 		Vector2[] returnValue = new Vector2[verticesLength];
 
@@ -120,7 +120,7 @@ public class rocktree_decoder
 			int v = unpackVarInt(packed, ref offset);
 			for (int j = 0; j < v; j++)
 			{
-				UInt16 idx = indices[idx_i++];
+				int idx = indices[idx_i++];
 				if (!(0 <= idx && idx < indices.Length))
 					throw new Exception("INTERNAL ERROR");
 				int vtx_i = idx;

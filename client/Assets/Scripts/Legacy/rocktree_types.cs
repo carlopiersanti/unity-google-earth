@@ -67,7 +67,7 @@ public class rocktree_t
 		public class mesh_t
 		{
 			//public vertex_t[] vertices;
-			public UInt16[] indices;
+			public int[] indices;
 			public Vector2 uv_offset;
 			public Vector2 uv_scale;
 

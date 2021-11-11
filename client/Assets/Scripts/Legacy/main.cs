@@ -413,7 +413,7 @@ public class main : MonoBehaviour
 			foreach (var mesh in node.meshes)
 			{
 				if (!mesh.buffered) rocktree_gl.bufferMesh(mesh);
-				rocktree_gl.bindAndDrawMesh(tileMaterial, mesh, transform_float, mask_map[full_path]);
+				rocktree_gl.bindAndDrawMesh(mainCamera, tileMaterial, mesh, transform_float, mask_map[full_path]);
 			}
 			//bufs[full_path] = node;
 		}
