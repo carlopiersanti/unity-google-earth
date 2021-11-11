@@ -375,9 +375,13 @@ public class main : MonoBehaviour
 			// set octant mask of previous node
 			int octant = (int)(full_path[level - 1] - '0');
 			var prev = full_path.Substring(0, level - 1);
+			if (!mask_map.ContainsKey(prev))
+				mask_map[prev] = 0;
 			mask_map[prev] |= (byte)(1 << octant);
 
 			// skip if node is masked completely
+			if (!mask_map.ContainsKey(full_path))
+				mask_map[full_path] = 0;
 			if (mask_map[full_path] == 0xff) continue;
 
 			// float transform matrix

@@ -84,7 +84,7 @@ public class rocktree_ex
 		if (!(node.can_have_data))
 			throw new System.Exception("INTERNAL ERROR");
 
-		for (int i = 0; i < 16; i++) node.matrix_globe_from_mesh.mat[i/4,i%4] = node_data.MatrixGlobeFromMesh[i];
+		for (int i = 0; i < 16; i++) node.matrix_globe_from_mesh.mat[i%4,i/4] = node_data.MatrixGlobeFromMesh[i];
 
 		foreach (var mesh in node_data.Meshes)
 		{
@@ -93,7 +93,7 @@ public class rocktree_ex
 			m.indices = rocktree_decoder.unpackIndices(mesh.Indices.ToByteArray());
 			m.mesh_positions = rocktree_decoder.unpackVertices(mesh.Vertices.ToByteArray());
 
-			m.mesh_texCoords = rocktree_decoder.unpackTexCoords(mesh.TextureCoordinates.ToByteArray(), m.mesh_positions.Length, ref m.uv_offset, ref m.uv_scale);
+			m.mesh_texCoords = rocktree_decoder.unpackTexCoords(mesh.TextureCoordinates.ToByteArray(), m.mesh_positions, ref m.uv_offset, ref m.uv_scale);
 			if (mesh.UvOffsetAndScale.Count == 4)
 			{
 				m.uv_offset[0] = mesh.UvOffsetAndScale[0];
@@ -112,14 +112,14 @@ public class rocktree_ex
 			if (!(0 <= layer_bounds[3] && layer_bounds[3] <= m.indices.Length))
 				throw new System.Exception("INTERNAL ERROR");
 
-			Array.Resize(ref m.indices, layer_bounds[3]);
+			//Array.Resize(ref m.indices, layer_bounds[3]);
 
 			var textures = mesh.Texture;
 			if (textures.Count != 1)
 				throw new Exception("INTERNAL ERROR");
 			
 			var texture = textures[0];
-			if (texture.Data.Count != 1);
+			if (texture.Data.Count != 1)
 				throw new Exception("INTERNAL ERROR");
 			
 			var tex = texture.Data[0];
@@ -128,7 +128,9 @@ public class rocktree_ex
 			if (texture.Format == GeoGlobetrotterProtoRocktree.Texture.Types.Format.Jpg)
 			{
 				var data = tex.ToByteArray();
-				int width, height, comp;
+				int[] width = new int[1];
+				int[] height = new int[1];
+				int[] comp = new int[1];
 				GCHandle pinnedData = GCHandle.Alloc(data, GCHandleType.Pinned);
 				GCHandle pinnedWidth = GCHandle.Alloc(width, GCHandleType.Pinned);
 				GCHandle pinnedHeight = GCHandle.Alloc(height, GCHandleType.Pinned);
@@ -137,11 +139,12 @@ public class rocktree_ex
 				IntPtr pinnedPixels = StbPlugin.export_stbi_load_from_memory(pinnedData.AddrOfPinnedObject(), tex.Length, pinnedWidth.AddrOfPinnedObject(), pinnedHeight.AddrOfPinnedObject(), pinnedComp.AddrOfPinnedObject(), 0);
 				if (pinnedPixels == null)
 					throw new Exception("INTERNAL ERROR");
-				if (!(width == texture.Width && height == texture.Height && comp == 3))
+
+				if (!(width[0] == texture.Width && height[0] == texture.Height && comp[0] == 3))
 					throw new Exception("INTERNAL ERROR");
 
-				byte[] managedArray = new byte[width * height * comp];
-				Marshal.Copy(pinnedPixels, managedArray, 0, width * height * comp);
+				byte[] managedArray = new byte[width[0] * height[0] * comp[0]];
+				Marshal.Copy(pinnedPixels, managedArray, 0, width[0] * height[0] * comp[0]);
 				
 				m.texture_Data = managedArray;
 				StbPlugin.export_stbi_image_free(pinnedPixels);

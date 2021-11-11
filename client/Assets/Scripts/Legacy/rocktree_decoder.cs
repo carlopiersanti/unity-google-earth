@@ -55,13 +55,13 @@ public class rocktree_decoder
 	}
 
 	// unpackTexCoords unpacks texture coordinates UV to 8-byte-per-vertex-array
-	public static Vector2[] unpackTexCoords(byte[] packed, int verticesLength, ref Vector2 uv_offset, ref Vector2 uv_scale)
+	public static Vector2[] unpackTexCoords(byte[] packed, UnityEngine.Vector3[] vertices, ref Vector2 uv_offset, ref Vector2 uv_scale)
 	{
-		Vector2[] returnValue = new Vector2[verticesLength];
+		Vector2[] returnValue = new Vector2[vertices.Length];
 		int dataIndex = 0;
-		int count = verticesLength;
-		UInt16 u_mod = (UInt16)((UInt16)1 + Tools.UnpackBytes(packed[0], packed[1]));
-		UInt16 v_mod = (UInt16)((UInt16)1 + Tools.UnpackBytes(packed[2], packed[3]));
+		int count = vertices.Length;
+		int u_mod = 1 + (UInt16)Tools.UnpackBytes(packed[0], packed[1]);
+		int v_mod = 1 + (UInt16)Tools.UnpackBytes(packed[2], packed[3]);
 		dataIndex += 4;
 		int vtxIndex = 0;
 		UInt16 u = 0, v = 0;
