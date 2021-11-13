@@ -4,6 +4,8 @@ using System.Collections;
 public class FlyCamera : MonoBehaviour
 {
 
+    public main m;
+
     /*
     Writen by Windexglow 11-13-10.  Use it, edit it, steal it I don't care.  
     Converted to C# 27-02-13 - no credit wanted.
@@ -56,7 +58,7 @@ public class FlyCamera : MonoBehaviour
                 p = p * mainSpeed;
             }
 
-            p = p * Time.deltaTime;
+            p = p * Time.deltaTime * m.speed_amp;
             UnityEngine.Vector3 newPosition = transform.position;
             if (Input.GetKey(KeyCode.Space))
             { //If player wants to move on X and Z axis only

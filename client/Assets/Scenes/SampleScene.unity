@@ -155,6 +155,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   mainCamera: {fileID: 963194227}
   tileMaterial: {fileID: 2100000, guid: d929c130b58b06c45895c04432e4d58e, type: 2}
+  speed_amp: 0
 --- !u!4 &87585011
 Transform:
   m_ObjectHideFlags: 0
@@ -370,6 +371,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: e54a7218d4c1f8d44bfc68fd7f5cd8b3, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  m: {fileID: 87585010}
 --- !u!1 &1621191882
 GameObject:
   m_ObjectHideFlags: 0

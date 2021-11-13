@@ -77,6 +77,9 @@ public class main : MonoBehaviour
 
     string[] octs = new string[] { "0", "1", "2", "3", "4", "5", "6", "7" };
 
+
+	public float speed_amp;
+
 	void drawPlanet()
 	{
 		var planetoid = _planetoid;
@@ -116,6 +119,8 @@ public class main : MonoBehaviour
 		mainCamera.nearClipPlane = (float)near;
 		mainCamera.farClipPlane = (float)far;
 		var projectionUnity = UnityEngine.Matrix4x4.Perspective(mainCamera.fieldOfView, mainCamera.aspect, mainCamera.nearClipPlane, mainCamera.farClipPlane);
+
+	    speed_amp = 100* Mathf.Min(2600, Mathf.Pow(Mathf.Max(0, ((float)altitude - 500) / 10000) + 1, 1.337f), 2) / 6;
 
 		// rotation
 		/*int mouse_x, mouse_y;
