@@ -30,9 +30,10 @@ public class FlyCamera : MonoBehaviour
         }
 
         lastMouse = Input.mousePosition - lastMouse;
-        lastMouse = new UnityEngine.Vector3(-lastMouse.y * camSens, lastMouse.x * camSens, 0);
-        lastMouse = new UnityEngine.Vector3(transform.eulerAngles.x + lastMouse.x, transform.eulerAngles.y + lastMouse.y, 0);
-        transform.eulerAngles = lastMouse;
+        lastMouse = new UnityEngine.Vector3(lastMouse.y * camSens, lastMouse.x * camSens, 0);
+        //lastMouse = new UnityEngine.Vector3(transform.eulerAngles.x + lastMouse.x, transform.eulerAngles.y + lastMouse.y, 0);
+        transform.rotation = Quaternion.LookRotation(Quaternion.AngleAxis(lastMouse.y, -transform.position.normalized) * transform.forward, transform.position.normalized);
+        transform.rotation = Quaternion.LookRotation(Quaternion.AngleAxis(lastMouse.x, -transform.right) * transform.forward, transform.position.normalized);
         lastMouse = Input.mousePosition;
         //Mouse  camera angle done.  
 
