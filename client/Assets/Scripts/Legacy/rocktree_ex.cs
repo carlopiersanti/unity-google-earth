@@ -96,15 +96,15 @@ public class rocktree_ex
 			m.mesh_texCoords = rocktree_decoder.unpackTexCoords(mesh.TextureCoordinates.ToByteArray(), m.mesh_positions, ref m.uv_offset, ref m.uv_scale);
 			if (mesh.UvOffsetAndScale.Count == 4)
 			{
-				m.uv_offset[0] = mesh.UvOffsetAndScale[0];
-				m.uv_offset[1] = mesh.UvOffsetAndScale[1];
-				m.uv_scale[0] = mesh.UvOffsetAndScale[2];
-				m.uv_scale[1] = mesh.UvOffsetAndScale[3];
+				m.uv_offset.x = mesh.UvOffsetAndScale[0];
+				m.uv_offset.y = mesh.UvOffsetAndScale[1];
+				m.uv_scale.x = mesh.UvOffsetAndScale[2];
+				m.uv_scale.y = mesh.UvOffsetAndScale[3];
 			}
 			else
 			{
-				m.uv_offset[1] -= 1 / m.uv_scale[1];
-				m.uv_scale[1] *= -1;
+				m.uv_offset.y -= 1 / m.uv_scale.y;
+				m.uv_scale.y *= -1;
 			}
 
 			int[] layer_bounds = new int[10];
@@ -181,7 +181,7 @@ public class rocktree_ex
 				var src = tex.ToByteArray();
 				GCHandle pinnedSrc = GCHandle.Alloc(src, GCHandleType.Pinned);
 				var dst_size = CrunchPlugin.crn_get_decompressed_size(pinnedSrc.AddrOfPinnedObject(), (uint)src_size, 0);
-				if ( ! (dst_size == ((texture.Width + 3) / 4) * ((texture.Height + 3) / 4) * 8));
+				if ( ! (dst_size == ((texture.Width + 3) / 4) * ((texture.Height + 3) / 4) * 8))
 					throw new Exception("INTERNAL ERROR");
 				m.texture_Data = new byte[dst_size];
 				GCHandle pinnedTexture = GCHandle.Alloc(m.texture_Data[0], GCHandleType.Pinned);

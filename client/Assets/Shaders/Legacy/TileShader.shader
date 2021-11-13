@@ -36,7 +36,7 @@ Shader "Custom/TileShader" {
             }
 
             fixed4 frag(v2f i) : SV_Target {
-                return float4(tex2D(maptexture, i.v_texcoords).rgb, 1.0);
+                return float4(tex2D(maptexture, float2(i.v_texcoords.x,1- i.v_texcoords.y) ).rgb, 1.0);
             }
 
             ENDCG

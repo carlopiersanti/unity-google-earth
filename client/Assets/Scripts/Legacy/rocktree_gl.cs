@@ -16,7 +16,7 @@ public class rocktree_gl : MonoBehaviour
 		if (mesh.texture_format==rocktree_t.texture_format.texture_format_rgb)
 			mesh.texture = new Texture2D(mesh.texture_width, mesh.texture_height, TextureFormat.RGB24, false);
 		else if (mesh.texture_format == rocktree_t.texture_format.texture_format_dxt1)
-			mesh.texture = new Texture2D(mesh.texture_width, mesh.texture_height, TextureFormat.DXT1, false);
+			mesh.texture = new Texture2D(mesh.texture_width, mesh.texture_height, TextureFormat.DXT1Crunched, false);
 
 		mesh.texture.LoadRawTextureData(mesh.texture_Data);
 		mesh.texture.Apply();

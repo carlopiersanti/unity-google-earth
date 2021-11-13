@@ -67,14 +67,14 @@ public class rocktree_decoder
 		UInt16 u = 0, v = 0;
 		for (int i = 0; i < count; i++)
 		{
-			returnValue[i].x = u = (UInt16)(u + Tools.UnpackBytes(packed[dataIndex + count * 0 + i],packed[dataIndex + count * 2 + i]) % u_mod);
-			returnValue[i].y = v = (UInt16)(v + Tools.UnpackBytes(packed[dataIndex + count * 1 + i],packed[dataIndex + count * 3 + i]) % v_mod);
+			returnValue[i].x = u = (UInt16)((u + (UInt16)Tools.UnpackBytes(packed[dataIndex + count * 0 + i],packed[dataIndex + count * 2 + i])) % u_mod);
+			returnValue[i].y = v = (UInt16)((v + (UInt16)Tools.UnpackBytes(packed[dataIndex + count * 1 + i],packed[dataIndex + count * 3 + i])) % v_mod);
 		}
 
 		uv_offset.x = 0.5f;
 		uv_offset.y = 0.5f;
-		uv_scale[0] = 1.0f / u_mod;
-		uv_scale[1] = 1.0f / v_mod;
+		uv_scale.x = 1.0f / u_mod;
+		uv_scale.y = 1.0f / v_mod;
 
 		return returnValue;
 	}
