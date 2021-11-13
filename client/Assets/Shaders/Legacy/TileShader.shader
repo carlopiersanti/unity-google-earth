@@ -1,7 +1,9 @@
 Shader "Custom/TileShader" {
     SubShader{
-        Pass {
+
+       Pass {
             CGPROGRAM
+
 
             uniform float4x4 transform;
             uniform float uv_offset_x;
