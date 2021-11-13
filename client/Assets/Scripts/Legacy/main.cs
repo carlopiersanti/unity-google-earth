@@ -50,7 +50,32 @@ public class main : MonoBehaviour
         });
     }
 
-	string[] octs = new string[] { "0", "1", "2", "3", "4", "5", "6", "7" };
+    private void Start()
+    {
+		Vector3 eye = new Vector3();
+		eye.mat[0, 0] = 1329866.230289;
+		eye.mat[1, 0] = -4643494.267515;
+		eye.mat[2, 0] = 4154677.131562;
+
+		Vector3 direction = new Vector3();
+		direction.mat[0, 0] = 0.219862;
+		direction.mat[1, 0] = 0.419329;
+		direction.mat[2, 0] = 0.312226;
+
+		UnityEngine.Vector3 position =
+	new UnityEngine.Vector3((float)eye.mat[0, 0], (float)eye.mat[1, 0], (float)eye.mat[2, 0]);
+
+		UnityEngine.Vector3 up = position.normalized;
+
+		UnityEngine.Vector3 lookAt =
+			new UnityEngine.Vector3((float)(direction.mat[0, 0]), (float)(direction.mat[1, 0]), (float)(direction.mat[2, 0]));
+
+		mainCamera.transform.position = UnityEngine.Vector3.zero;
+		mainCamera.transform.LookAt(-lookAt, up);
+		mainCamera.transform.position = position;
+	}
+
+    string[] octs = new string[] { "0", "1", "2", "3", "4", "5", "6", "7" };
 
 	void drawPlanet()
 	{
@@ -70,16 +95,6 @@ public class main : MonoBehaviour
 		bool key_boost_pressed = Input.GetKey(KeyCode.LeftShift) || Input.GetKey(KeyCode.RightShift);
 		bool mouse_pressed = Input.GetMouseButton(1);
 
-		Vector3 eye = new Vector3();
-		eye.mat[0, 0] = 1329866.230289;
-		eye.mat[1, 0] = -4643494.267515;
-		eye.mat[2, 0] = 4154677.131562;
-
-		Vector3 direction = new Vector3();
-		direction.mat[0, 0] = 0.219862;
-		direction.mat[1, 0] = 0.419329;
-		direction.mat[2, 0] = 0.312226;
-
 
 		// from lat/lon
 		//static Vector3d ecef = { ...https://www.oc.nps.edu/oc2902w/coord/llhxyz.htm };
@@ -91,7 +106,7 @@ public class main : MonoBehaviour
 		// projection
 		//float aspect_ratio = (float)width / (float)height;
 		//float fov = 0.25f * (float)M_PI;
-		var altitude = Math.Sqrt(Math.Pow(eye.mat[0, 0], 2) + Math.Pow(eye.mat[1, 0], 2) + Math.Pow(eye.mat[2, 0], 2)) - planet_radius;
+		double altitude = mainCamera.transform.position.magnitude - planet_radius;
 		var horizon = Math.Sqrt(altitude * (2 * planet_radius + altitude));
 		var near = horizon > 370000 ? altitude / 2 : 50;
 		var far = horizon;
@@ -140,17 +155,7 @@ public class main : MonoBehaviour
 
 		auto view = lookAt(eye, eye + direction, up);*/
 
-		UnityEngine.Vector3 position =
-			new UnityEngine.Vector3((float)eye.mat[0, 0], (float)eye.mat[1, 0], (float)eye.mat[2, 0]);
 
-		UnityEngine.Vector3 up = position.normalized;
-
-		UnityEngine.Vector3 lookAt = 
-			new UnityEngine.Vector3((float)(direction.mat[0, 0]), (float)(direction.mat[1, 0]), (float)(direction.mat[2, 0]));
-
-		mainCamera.transform.position = UnityEngine.Vector3.zero;
-		mainCamera.transform.LookAt(-lookAt, up);
-		mainCamera.transform.position = position;
 		Matrix4x4 view = new Matrix4x4(mainCamera.transform.worldToLocalMatrix);
 		Matrix4x4 projection = new Matrix4x4(projectionUnity);
 
@@ -161,7 +166,7 @@ public class main : MonoBehaviour
 		List<Tuple<string, rocktree_t.bulk_t>> valid = new List<Tuple<string, rocktree_t.bulk_t>> { new Tuple<string, rocktree_t.bulk_t>("",current_bulk) };
 
 		List<Tuple<string, rocktree_t.bulk_t>> next_valid = new List<Tuple<string, rocktree_t.bulk_t>>();
-		Dictionary < string, rocktree_t.node_t> potential_nodes = new Dictionary<string, rocktree_t.node_t>();
+		SortedDictionary < string, rocktree_t.node_t> potential_nodes = new SortedDictionary<string, rocktree_t.node_t>();
 		//std::multimap<double, rocktree_t::node_t *> dist_nodes;
 
 		// todo: improve download order
@@ -234,8 +239,19 @@ public class main : MonoBehaviour
 
 					{
 						var t = new Matrix4x4();
-						var sub = eye - node.obb.center;
-						Matrix translation = eye + Math.Sqrt(Math.Pow(sub.mat[0,0],2) + Math.Pow(sub.mat[1, 0], 2) + Math.Pow(sub.mat[2, 0], 2)) * direction;
+						var sub = new Vector3();
+						sub.mat[0, 0] = mainCamera.transform.position.x - node.obb.center[0, 0];
+						sub.mat[1, 0] = mainCamera.transform.position.y - node.obb.center[1, 0];
+						sub.mat[2, 0] = mainCamera.transform.position.z - node.obb.center[2, 0];
+						var eye = new Vector3();
+						eye.mat[0, 0] = mainCamera.transform.position.x;
+						eye.mat[1, 0] = mainCamera.transform.position.y;
+						eye.mat[2, 0] = mainCamera.transform.position.z;
+						var fwd = new Vector3();
+						fwd.mat[0, 0] = -mainCamera.transform.forward.x;
+						fwd.mat[1, 0] = -mainCamera.transform.forward.y;
+						fwd.mat[2, 0] = -mainCamera.transform.forward.z;
+						Matrix translation = eye + Math.Sqrt(Math.Pow(sub.mat[0,0],2) + Math.Pow(sub.mat[1, 0], 2) + Math.Pow(sub.mat[2, 0], 2)) * fwd;
 						t.mat[0, 0] = 1;
 						t.mat[1, 1] = 1;
 						t.mat[2, 2] = 1;
@@ -267,7 +283,10 @@ public class main : MonoBehaviour
 					}
 				}
 			}
-			if (next_valid.Count == 0) break;
+			if (next_valid.Count == 0)
+			{
+				break;
+			}
 			valid = next_valid;
 			next_valid = new List<Tuple<string, rocktree_t.bulk_t>>();
 		}	
@@ -286,7 +305,7 @@ public class main : MonoBehaviour
 		}
 
 		// unbuffer and obsolete nodes
-		List<rocktree_t.bulk_t> x = new List<rocktree_t.bulk_t> { current_bulk };
+		/*List<rocktree_t.bulk_t> x = new List<rocktree_t.bulk_t> { current_bulk };
 		int buf_cnt = 0, obs_n_cnt = 0, total_n = 0;
 		while (x.Count != 0)
 		{
@@ -355,7 +374,7 @@ public class main : MonoBehaviour
 			}
 		};
 
-		po(current_bulk);
+		po(current_bulk);*/
 
 		// 8-bit octant mask flags of nodes
 		Dictionary< string, byte > mask_map = new Dictionary<string, byte>();

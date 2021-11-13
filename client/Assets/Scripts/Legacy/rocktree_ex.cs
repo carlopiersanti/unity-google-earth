@@ -175,7 +175,7 @@ public class rocktree_ex
 				if ( ! (dst_size == ((texture.Width + 3) / 4) * ((texture.Height + 3) / 4) * 8));
 					throw new Exception("INTERNAL ERROR");
 				m.texture_Data = new byte[dst_size];
-				GCHandle pinnedTexture = GCHandle.Alloc(m.texture_Data, GCHandleType.Pinned);
+				GCHandle pinnedTexture = GCHandle.Alloc(m.texture_Data[0], GCHandleType.Pinned);
 				CrunchPlugin.crn_decompress(pinnedSrc.AddrOfPinnedObject(), (uint)src_size, pinnedTexture.AddrOfPinnedObject(), dst_size, 0);
 				m.texture_format = rocktree_t.texture_format.texture_format_dxt1;
 				pinnedTexture.Free();

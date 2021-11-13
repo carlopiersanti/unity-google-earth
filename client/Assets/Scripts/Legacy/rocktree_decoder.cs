@@ -333,13 +333,13 @@ public class rocktree_decoder
 		double s2 = Mathf.Sin(euler.z);
 		var orientation = obb.orientation.mat;
 		orientation[0,0] = c0 * c2 - c1 * s0 * s2;
-		orientation[0,1] = c1 * c0 * s2 + c2 * s0;
-		orientation[0,2] = s2 * s1;
-		orientation[1,0] = -c0 * s2 - c2 * c1 * s0;
+		orientation[1,0] = c1 * c0 * s2 + c2 * s0;
+		orientation[2,0] = s2 * s1;
+		orientation[0,1] = -c0 * s2 - c2 * c1 * s0;
 		orientation[1,1] = c0 * c1 * c2 - s0 * s2;
-		orientation[1,2] = c2 * s1;
-		orientation[2,0] = s1 * s0;
-		orientation[2,1] = -c0 * s1;
+		orientation[2,1] = c2 * s1;
+		orientation[0,2] = s1 * s0;
+		orientation[1,2] = -c0 * s1;
 		orientation[2,2] = c1;
 
 		return obb;

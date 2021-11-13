@@ -13,10 +13,10 @@ public class rocktree_gl : MonoBehaviour
 
 	public static void bufferMesh(rocktree_t.node_t.mesh_t mesh)
 	{
-		if (mesh.texture_format==rocktree_t.texture_format.texture_format_dxt1)
-			mesh.texture = new Texture2D(mesh.texture_width, mesh.texture_height, TextureFormat.DXT1Crunched, false);
-		else if (mesh.texture_format == rocktree_t.texture_format.texture_format_rgb)
+		if (mesh.texture_format==rocktree_t.texture_format.texture_format_rgb)
 			mesh.texture = new Texture2D(mesh.texture_width, mesh.texture_height, TextureFormat.RGB24, false);
+		else if (mesh.texture_format == rocktree_t.texture_format.texture_format_dxt1)
+			mesh.texture = new Texture2D(mesh.texture_width, mesh.texture_height, TextureFormat.DXT1Crunched, false);
 
 		mesh.texture.LoadRawTextureData(mesh.texture_Data);
 		mesh.texture.Apply();
@@ -42,7 +42,8 @@ public class rocktree_gl : MonoBehaviour
 		block.SetFloat("uv_scale_y", mesh.uv_scale.y);
 		block.SetTexture("maptexture", mesh.texture);
 
-		Graphics.DrawMesh(mesh.mesh, transform_float, material, 0, null, 0, block,false,false,false);
+		
+		Graphics.DrawMesh(mesh.mesh, camera.cameraToWorldMatrix, material, 0, null, 0, block,false,false,false);
     }
 
 }
