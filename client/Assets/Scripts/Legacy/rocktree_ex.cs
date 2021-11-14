@@ -81,6 +81,11 @@ public class rocktree_ex
 
 	public static void populateNode(rocktree_t.node_t node, NodeData node_data)
 	{
+		if (node.request.NodeKey.Path == "216")
+        {
+			int dfdqq = 0;
+        }
+
 		if (!(node.can_have_data))
 			throw new System.Exception("INTERNAL ERROR");
 
@@ -99,7 +104,7 @@ public class rocktree_ex
 				m.uv_offset.x = mesh.UvOffsetAndScale[0];
 				m.uv_offset.y = mesh.UvOffsetAndScale[1];
 				m.uv_scale.x = mesh.UvOffsetAndScale[2];
-				m.uv_scale.y = mesh.UvOffsetAndScale[3];
+				m.uv_scale.y = -mesh.UvOffsetAndScale[3];
 			}
 			else
 			{

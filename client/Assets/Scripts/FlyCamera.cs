@@ -32,10 +32,10 @@ public class FlyCamera : MonoBehaviour
         }
 
         lastMouse = Input.mousePosition - lastMouse;
-        lastMouse = new UnityEngine.Vector3(lastMouse.y * camSens, lastMouse.x * camSens, 0);
+        //lastMouse = new UnityEngine.Vector3(lastMouse.y * camSens, lastMouse.x * camSens, 0);
         //lastMouse = new UnityEngine.Vector3(transform.eulerAngles.x + lastMouse.x, transform.eulerAngles.y + lastMouse.y, 0);
-        transform.rotation = Quaternion.LookRotation(Quaternion.AngleAxis(lastMouse.y, -transform.position.normalized) * transform.forward, transform.position.normalized);
-        transform.rotation = Quaternion.LookRotation(Quaternion.AngleAxis(lastMouse.x, -transform.right) * transform.forward, transform.position.normalized);
+        transform.rotation = Quaternion.LookRotation(Quaternion.AngleAxis(-lastMouse.x, transform.position.normalized) * transform.forward, transform.position.normalized);
+        transform.rotation = Quaternion.LookRotation(Quaternion.AngleAxis(-lastMouse.y, -transform.right) * transform.forward, transform.position.normalized);
         lastMouse = Input.mousePosition;
         //Mouse  camera angle done.  
 
@@ -77,11 +77,11 @@ public class FlyCamera : MonoBehaviour
     private UnityEngine.Vector3 GetBaseInput()
     { //returns the basic values, if it's 0 than it's not active.
         UnityEngine.Vector3 p_Velocity = new UnityEngine.Vector3();
-        if (Input.GetKey(KeyCode.Z))
+        if (Input.GetKey(KeyCode.S))
         {
             p_Velocity += new UnityEngine.Vector3(0, 0, 1);
         }
-        if (Input.GetKey(KeyCode.S))
+        if (Input.GetKey(KeyCode.Z))
         {
             p_Velocity += new UnityEngine.Vector3(0, 0, -1);
         }

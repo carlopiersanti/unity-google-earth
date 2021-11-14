@@ -64,11 +64,16 @@ public class rocktree_decoder
 		int v_mod = 1 + (UInt16)Tools.UnpackBytes(packed[2], packed[3]);
 		dataIndex += 4;
 		int vtxIndex = 0;
-		UInt16 u = 0, v = 0;
+		int u = 0, v = 0;
 		for (int i = 0; i < count; i++)
 		{
-			returnValue[i].x = u = (UInt16)((u + (UInt16)Tools.UnpackBytes(packed[dataIndex + count * 0 + i],packed[dataIndex + count * 2 + i])) % u_mod);
-			returnValue[i].y = v = (UInt16)((v + (UInt16)Tools.UnpackBytes(packed[dataIndex + count * 1 + i],packed[dataIndex + count * 3 + i])) % v_mod);
+			int x = (int)( u = (u + packed[dataIndex + count * 0 + i] + (packed[dataIndex + count * 2 + i] << 8)) % u_mod);
+			int y = (int)(v = (v + packed[dataIndex + count * 1 + i] + (packed[dataIndex + count * 3 + i] << 8)) % v_mod);
+			int x1 = x & 0x0000FFFF;
+			int y1 = y & 0x0000FFFF;
+
+			returnValue[i].x = /*(x & 0x00008000)!=0 ? (~x & 0x0000FFFF) +1 :*/ x;
+			returnValue[i].y = /*(y & 0x00008000)!=0 ? (~y & 0x0000FFFF) +1 :*/ y;
 		}
 
 		uv_offset.x = 0.5f;

@@ -52,7 +52,7 @@ public class main : MonoBehaviour
 
     private void Start()
     {
-		Vector3 eye = new Vector3();
+		/*Vector3 eye = new Vector3();
 		eye.mat[0, 0] = 1329866.230289;
 		eye.mat[1, 0] = -4643494.267515;
 		eye.mat[2, 0] = 4154677.131562;
@@ -72,10 +72,15 @@ public class main : MonoBehaviour
 
 		mainCamera.transform.position = UnityEngine.Vector3.zero;
 		mainCamera.transform.LookAt(-lookAt, up);
-		mainCamera.transform.position = position;
+		mainCamera.transform.position = position;*/
+
+		Debug.LogError("----------------------------------------");
+		Debug.LogError(mainCamera.transform.position);
+		Debug.LogError(-mainCamera.transform.forward);
+
 	}
 
-    string[] octs = new string[] { "0", "1", "2", "3", "4", "5", "6", "7" };
+	string[] octs = new string[] { "0", "1", "2", "3", "4", "5", "6", "7" };
 
 
 	public float speed_amp;
@@ -111,7 +116,7 @@ public class main : MonoBehaviour
 		//float fov = 0.25f * (float)M_PI;
 		double altitude = mainCamera.transform.position.magnitude - planet_radius;
 		var horizon = Math.Sqrt(altitude * (2 * planet_radius + altitude));
-		var near = horizon > 370000 ? altitude / 2 : 50;
+		var near = horizon > 370000 ? altitude / 2 : 5;
 		var far = horizon;
 		if (near >= far) near = far - 1;
 		if (double.IsNaN(far) || far < near) far = near + 1;
@@ -436,6 +441,10 @@ public class main : MonoBehaviour
 			// buffer, bind, draw
 			foreach (var mesh in node.meshes)
 			{
+				if (full_path=="216")
+                {
+					int aa = 90;
+                }
 				if (!mesh.buffered) rocktree_gl.bufferMesh(mesh);
 				rocktree_gl.bindAndDrawMesh(mainCamera, tileMaterial, mesh, transform_float, mask_map[full_path]);
 			}
