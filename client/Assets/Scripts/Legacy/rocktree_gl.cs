@@ -3,18 +3,7 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Runtime.InteropServices;
 using UnityEngine;
-
-public struct vertex
-{
-	public UnityEngine.Vector3 position;
-	public Vector2 octant;
-	public Vector2 texCoord;
-
-	public static int size()
-    {
-		return 3*sizeof(float) + 2*sizeof(float) + 2*sizeof(float);
-	}
-}
+using static rocktree_t.node_t.mesh_t;
 
 public class rocktree_gl : MonoBehaviour
 {
@@ -32,27 +21,11 @@ public class rocktree_gl : MonoBehaviour
 	{
 		mesh.buffering = true;
 		
-		//mesh.texture.LoadRawTextureData(mesh.texture_Data);
-		//mesh.texture.Apply();
-
 		mesh.computeBufferIndices = new ComputeBuffer(mesh.indices.Length, sizeof(int));
-		mesh.computeBufferVertex = new ComputeBuffer ( mesh.mesh_positions.Length, vertex.size() );
+		mesh.computeBufferVertex = new ComputeBuffer ( mesh.vertices.Length, vertex_t.SizeOf() );
 
-		int[] computeBufferIndices = new int[mesh.indices.Length];
-		vertex[] computeBufferVertex = new vertex[mesh.mesh_positions.Length];
-
-		for (int i = 0; i < mesh.indices.Length; i++)
-			computeBufferIndices[i] = mesh.indices[i];
-
-		for (int i = 0; i < mesh.mesh_positions.Length; i++)
-        {
-			computeBufferVertex[i].position = mesh.mesh_positions[i];
-			computeBufferVertex[i].octant = mesh.octants[i];
-			computeBufferVertex[i].texCoord = mesh.mesh_texCoords[i];
-		}
-
-		mesh.computeBufferIndices.SetData(computeBufferIndices);
-		mesh.computeBufferVertex.SetData(computeBufferVertex);
+		mesh.computeBufferIndices.SetData(mesh.indices);
+		mesh.computeBufferVertex.SetData(mesh.vertices);
 
 		GCHandle pinnedData = GCHandle.Alloc(mesh.texture_Data, GCHandleType.Pinned);
 		if (mesh.texture_format == rocktree_t.texture_format.texture_format_rgb)

@@ -96,9 +96,9 @@ public class rocktree_ex
 			rocktree_t.node_t.mesh_t m = new rocktree_t.node_t.mesh_t();
 
 			m.indices = rocktree_decoder.unpackIndices(mesh.Indices.ToByteArray());
-			m.mesh_positions = rocktree_decoder.unpackVertices(mesh.Vertices.ToByteArray());
+			m.vertices = rocktree_decoder.unpackVertices(mesh.Vertices.ToByteArray());
 
-			m.mesh_texCoords = rocktree_decoder.unpackTexCoords(mesh.TextureCoordinates.ToByteArray(), m.mesh_positions, ref m.uv_offset, ref m.uv_scale);
+			rocktree_decoder.unpackTexCoords(mesh.TextureCoordinates.ToByteArray(), m.vertices, ref m.uv_offset, ref m.uv_scale);
 			if (mesh.UvOffsetAndScale.Count == 4)
 			{
 				m.uv_offset.x = mesh.UvOffsetAndScale[0];
@@ -113,7 +113,7 @@ public class rocktree_ex
 			}
 
 			int[] layer_bounds = new int[10];
-			m.octants = rocktree_decoder.unpackOctantMaskAndOctantCountsAndLayerBounds(mesh.LayerAndOctantCounts.ToByteArray(), m.indices, m.mesh_positions.Length, layer_bounds);
+			rocktree_decoder.unpackOctantMaskAndOctantCountsAndLayerBounds(mesh.LayerAndOctantCounts.ToByteArray(), m.indices, m.vertices, layer_bounds);
 			if (!(0 <= layer_bounds[3] && layer_bounds[3] <= m.indices.Length))
 				throw new System.Exception("INTERNAL ERROR");
 
