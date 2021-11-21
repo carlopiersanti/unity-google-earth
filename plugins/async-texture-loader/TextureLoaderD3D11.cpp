@@ -35,16 +35,6 @@ namespace Inking
         int width = operation->GetWidth();
         int height = operation->GetHeight();
 
-        stbi_set_flip_vertically_on_load(1);
-
-        for (int i = 3; i < width * height * 4; i = i + 4)
-        {
-            dataRaw[i] = 0xff;
-        }
-
-        //char fileName2[1024] = "";
-        //stbi_convert_wchar_to_utf8(fileName2, 1024, fileName);
-
         auto pixels = dataRaw;
 
         D3D11_TEXTURE2D_DESC desc;
