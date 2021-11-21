@@ -32,6 +32,9 @@ Shader "Custom/TileShader" {
                 float mask = octant_mask[int(i.octant.x)] ? 0.0f : 1.0f;
                 o.v_texcoords = (i.texcoords + float2(uv_offset_x, uv_offset_y)) * float2(uv_scale_x, uv_scale_y) * mask;
                 o.gl_Position = mul(transform , float4(i.position.xyz, 1.0) )*mask;
+                o.gl_Position.y *= -1;
+                o.gl_Position.z = (-o.gl_Position.z / o.gl_Position.w + 1.0) / 2.0 * o.gl_Position.w;
+
                 return o;
             }
 

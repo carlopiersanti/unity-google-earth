@@ -41,7 +41,11 @@ public class rocktree_gl : MonoBehaviour
 		block.SetFloat("uv_scale_x", mesh.uv_scale.x);
 		block.SetFloat("uv_scale_y", mesh.uv_scale.y);
 		block.SetTexture("maptexture", mesh.texture);
-		Graphics.DrawMesh(mesh.mesh, camera.cameraToWorldMatrix, material, 0, null, 0, block, false, false, false);
+
+		//Graphics.DrawMeshInstanced(mesh.mesh, 0, material, new UnityEngine.Matrix4x4[] { camera.cameraToWorldMatrix }, 1, block, UnityEngine.Rendering.ShadowCastingMode.Off, false, 0, camera, UnityEngine.Rendering.LightProbeUsage.Off);
+
+
+		Graphics.DrawMesh(mesh.mesh, /*GL.GetGPUProjectionMatrix(*/camera.cameraToWorldMatrix/*, false)*/, material, 0, null, 0, block, false, false, false);
     }
 
 }

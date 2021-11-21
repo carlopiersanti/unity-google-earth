@@ -441,10 +441,6 @@ public class main : MonoBehaviour
 			// buffer, bind, draw
 			foreach (var mesh in node.meshes)
 			{
-				if (full_path=="216")
-                {
-					int aa = 90;
-                }
 				if (!mesh.buffered) rocktree_gl.bufferMesh(mesh);
 				rocktree_gl.bindAndDrawMesh(mainCamera, tileMaterial, mesh, transform_float, mask_map[full_path]);
 			}
