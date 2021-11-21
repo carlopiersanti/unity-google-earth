@@ -80,9 +80,11 @@ public class rocktree_t
 			public UnityEngine.Vector2[] mesh_texCoords;
 			public UnityEngine.Vector2[] octants;
 
+			public ComputeBuffer computeBufferIndices;
+			public ComputeBuffer computeBufferVertex;
+
 			public bool buffered;
 
-			public UnityEngine.Mesh mesh;
 			public Texture2D texture;
 		};
 		public List<mesh_t> meshes = new List<mesh_t>();

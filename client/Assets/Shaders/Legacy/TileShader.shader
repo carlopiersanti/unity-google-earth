@@ -19,6 +19,10 @@ Shader "Custom/TileShader" {
                 float2 texcoords : TEXCOORD1;
             };
 
+            StructuredBuffer<appdata_t> vertices;
+            StructuredBuffer<int> indexes;
+
+
             struct v2f {
                 float4 gl_Position  : SV_POSITION;
                 float2 v_texcoords : TEXCOORD0;
@@ -27,11 +31,11 @@ Shader "Custom/TileShader" {
             #pragma vertex vert
             #pragma fragment frag
 
-            v2f vert(appdata_t i){
+            v2f vert(uint id : SV_VertexID){
                 v2f o;
-                float mask = octant_mask[int(i.octant.x)] ? 0.0f : 1.0f;
-                o.v_texcoords = (i.texcoords + float2(uv_offset_x, uv_offset_y)) * float2(uv_scale_x, uv_scale_y) * mask;
-                o.gl_Position = mul(transform , float4(i.position.xyz, 1.0) )*mask;
+                float mask = octant_mask[int(vertices[indexes[id]].octant.x)] ? 0.0f : 1.0f;
+                o.v_texcoords = (vertices[indexes[id]].texcoords + float2(uv_offset_x, uv_offset_y)) * float2(uv_scale_x, uv_scale_y) * mask;
+                o.gl_Position = mul(transform , float4(vertices[indexes[id]].position.xyz, 1.0) )*mask;
                 o.gl_Position.y *= -1;
                 o.gl_Position.z = (-o.gl_Position.z / o.gl_Position.w + 1.0) / 2.0 * o.gl_Position.w;
 

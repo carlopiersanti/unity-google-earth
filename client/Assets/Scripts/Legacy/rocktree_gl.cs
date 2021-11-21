@@ -2,14 +2,29 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
+public struct vertex
+{
+	public UnityEngine.Vector3 position;
+	public Vector2 octant;
+	public Vector2 texCoord;
+
+	public static int size()
+    {
+		return 3*sizeof(float) + 2*sizeof(float) + 2*sizeof(float);
+	}
+}
+
 public class rocktree_gl : MonoBehaviour
 {
 
 	public static void unbufferMesh(rocktree_t.node_t.mesh_t mesh)
 	{
-		Destroy(mesh.mesh);
+		mesh.computeBufferIndices.Dispose();
+		mesh.computeBufferVertex.Dispose();
 		Destroy(mesh.texture);
 	}
+
+
 
 	public static void bufferMesh(rocktree_t.node_t.mesh_t mesh)
 	{
@@ -21,12 +36,24 @@ public class rocktree_gl : MonoBehaviour
 		mesh.texture.LoadRawTextureData(mesh.texture_Data);
 		mesh.texture.Apply();
 
-		mesh.mesh = new Mesh();
-		mesh.mesh.vertices = mesh.mesh_positions;
-		mesh.mesh.triangles = mesh.indices;
-		mesh.mesh.uv = mesh.octants;
-		mesh.mesh.uv2 = mesh.mesh_texCoords;
-		mesh.mesh.bounds = new Bounds(UnityEngine.Vector3.zero, new UnityEngine.Vector3(float.MaxValue, float.MaxValue, float.MaxValue) );
+		mesh.computeBufferIndices = new ComputeBuffer(mesh.indices.Length, sizeof(int));
+		mesh.computeBufferVertex = new ComputeBuffer ( mesh.mesh_positions.Length, vertex.size() );
+
+		int[] computeBufferIndices = new int[mesh.indices.Length];
+		vertex[] computeBufferVertex = new vertex[mesh.mesh_positions.Length];
+
+		for (int i = 0; i < mesh.indices.Length; i++)
+			computeBufferIndices[i] = mesh.indices[i];
+
+		for (int i = 0; i < mesh.mesh_positions.Length; i++)
+        {
+			computeBufferVertex[i].position = mesh.mesh_positions[i];
+			computeBufferVertex[i].octant = mesh.octants[i];
+			computeBufferVertex[i].texCoord = mesh.mesh_texCoords[i];
+		}
+
+		mesh.computeBufferIndices.SetData(computeBufferIndices);
+		mesh.computeBufferVertex.SetData(computeBufferVertex);
 
 		mesh.buffered = true;
 	}
@@ -41,11 +68,10 @@ public class rocktree_gl : MonoBehaviour
 		block.SetFloat("uv_scale_x", mesh.uv_scale.x);
 		block.SetFloat("uv_scale_y", mesh.uv_scale.y);
 		block.SetTexture("maptexture", mesh.texture);
+		block.SetBuffer("indexes", mesh.computeBufferIndices);
+		block.SetBuffer("vertices", mesh.computeBufferVertex);
 
-		//Graphics.DrawMeshInstanced(mesh.mesh, 0, material, new UnityEngine.Matrix4x4[] { camera.cameraToWorldMatrix }, 1, block, UnityEngine.Rendering.ShadowCastingMode.Off, false, 0, camera, UnityEngine.Rendering.LightProbeUsage.Off);
-
-
-		Graphics.DrawMesh(mesh.mesh, /*GL.GetGPUProjectionMatrix(*/camera.cameraToWorldMatrix/*, false)*/, material, 0, null, 0, block, false, false, false);
+		Graphics.DrawProcedural(material, new Bounds(UnityEngine.Vector3.zero, new UnityEngine.Vector3(float.MaxValue, float.MaxValue, float.MaxValue)), MeshTopology.Triangles, mesh.computeBufferIndices.count, 1, null, block, UnityEngine.Rendering.ShadowCastingMode.Off, false, 0);
     }
 
 }
