@@ -119,26 +119,6 @@ public class rocktree_ex
 
 			Array.Resize(ref m.indices, layer_bounds[3]);
 
-			int[] indicesDestripped = new int[(m.indices.Length - 2) * 3];
-			int j = 0;
-			for ( int i = 2; i < m.indices.Length; i++)
-            {
-				if (i%2==1)
-                {
-					indicesDestripped[j] = m.indices[i - 2];
-					indicesDestripped[j + 1] = m.indices[i - 1];
-					indicesDestripped[j + 2] = m.indices[i];
-				}
-				else
-				{
-					indicesDestripped[j] = m.indices[i - 2];
-					indicesDestripped[j+1 ] = m.indices[i];
-					indicesDestripped[j + 2] = m.indices[i-1];
-				}
-				j += 3;
-			}
-			m.indices = indicesDestripped;
-
 			var textures = mesh.Texture;
 			if (textures.Count != 1)
 				throw new Exception("INTERNAL ERROR");

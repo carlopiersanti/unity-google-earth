@@ -71,7 +71,7 @@ public class rocktree_gl : MonoBehaviour
 		block.SetBuffer("indexes", mesh.computeBufferIndices);
 		block.SetBuffer("vertices", mesh.computeBufferVertex);
 
-		Graphics.DrawProcedural(material, new Bounds(UnityEngine.Vector3.zero, new UnityEngine.Vector3(float.MaxValue, float.MaxValue, float.MaxValue)), MeshTopology.Triangles, mesh.computeBufferIndices.count, 1, null, block, UnityEngine.Rendering.ShadowCastingMode.Off, false, 0);
+		Graphics.DrawProcedural(material, new Bounds(UnityEngine.Vector3.zero, new UnityEngine.Vector3(float.MaxValue, float.MaxValue, float.MaxValue)), MeshTopology.Triangles, (mesh.computeBufferIndices.count - 2) * 3, 1, null, block, UnityEngine.Rendering.ShadowCastingMode.Off, false, 0);
     }
 
 }
