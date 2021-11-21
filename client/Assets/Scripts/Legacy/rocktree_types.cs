@@ -84,6 +84,7 @@ public class rocktree_t
 			public ComputeBuffer computeBufferVertex;
 
 			public bool buffered;
+			public bool buffering;
 
 			public Texture2D texture;
 		};

@@ -1,5 +1,7 @@
+using Inking;
 using System.Collections;
 using System.Collections.Generic;
+using System.Runtime.InteropServices;
 using UnityEngine;
 
 public struct vertex
@@ -28,13 +30,10 @@ public class rocktree_gl : MonoBehaviour
 
 	public static void bufferMesh(rocktree_t.node_t.mesh_t mesh)
 	{
-		if (mesh.texture_format==rocktree_t.texture_format.texture_format_rgb)
-			mesh.texture = new Texture2D(mesh.texture_width, mesh.texture_height, TextureFormat.RGB24, false);
-		else if (mesh.texture_format == rocktree_t.texture_format.texture_format_dxt1)
-			mesh.texture = new Texture2D(mesh.texture_width, mesh.texture_height, TextureFormat.DXT1Crunched, false);
-
-		mesh.texture.LoadRawTextureData(mesh.texture_Data);
-		mesh.texture.Apply();
+		mesh.buffering = true;
+		
+		//mesh.texture.LoadRawTextureData(mesh.texture_Data);
+		//mesh.texture.Apply();
 
 		mesh.computeBufferIndices = new ComputeBuffer(mesh.indices.Length, sizeof(int));
 		mesh.computeBufferVertex = new ComputeBuffer ( mesh.mesh_positions.Length, vertex.size() );
@@ -55,7 +54,29 @@ public class rocktree_gl : MonoBehaviour
 		mesh.computeBufferIndices.SetData(computeBufferIndices);
 		mesh.computeBufferVertex.SetData(computeBufferVertex);
 
-		mesh.buffered = true;
+		GCHandle pinnedData = GCHandle.Alloc(mesh.texture_Data, GCHandleType.Pinned);
+		if (mesh.texture_format == rocktree_t.texture_format.texture_format_rgb)
+        {
+			TextureLoader.Instance.LoadAsync(pinnedData.AddrOfPinnedObject(), mesh.texture_width, mesh.texture_height, (texture) =>
+			{
+				mesh.texture = texture.ToUnityTexture2D();
+				pinnedData.Free();
+				mesh.buffered = true;
+			}, () =>
+			{
+				pinnedData.Free();
+				Debug.LogError("Load Failed : ");
+			});
+		}
+		else if (mesh.texture_format == rocktree_t.texture_format.texture_format_dxt1)
+        {
+			Debug.LogError("NOT OPTIMIZED TEXTURE FORMAT, THIS COULD CAUSE LAGS");
+			mesh.texture = new UnityEngine.Texture2D(mesh.texture_width, mesh.texture_height, TextureFormat.DXT1Crunched, false);
+			mesh.buffered = true;
+		}
+
+
+
 	}
 
 	public static void bindAndDrawMesh(Camera camera, Material material, rocktree_t.node_t.mesh_t mesh, UnityEngine.Matrix4x4 transform_float, byte mask_map)

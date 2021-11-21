@@ -141,15 +141,15 @@ public class rocktree_ex
 				GCHandle pinnedHeight = GCHandle.Alloc(height, GCHandleType.Pinned);
 				GCHandle pinnedComp = GCHandle.Alloc(comp, GCHandleType.Pinned);
 
-				IntPtr pinnedPixels = StbPlugin.export_stbi_load_from_memory(pinnedData.AddrOfPinnedObject(), tex.Length, pinnedWidth.AddrOfPinnedObject(), pinnedHeight.AddrOfPinnedObject(), pinnedComp.AddrOfPinnedObject(), 0);
+				IntPtr pinnedPixels = StbPlugin.export_stbi_load_from_memory(pinnedData.AddrOfPinnedObject(), tex.Length, pinnedWidth.AddrOfPinnedObject(), pinnedHeight.AddrOfPinnedObject(), pinnedComp.AddrOfPinnedObject(), 4);
 				if (pinnedPixels == null)
 					throw new Exception("INTERNAL ERROR");
 
 				if (!(width[0] == texture.Width && height[0] == texture.Height && comp[0] == 3))
 					throw new Exception("INTERNAL ERROR");
 
-				byte[] managedArray = new byte[width[0] * height[0] * comp[0]];
-				Marshal.Copy(pinnedPixels, managedArray, 0, width[0] * height[0] * comp[0]);
+				byte[] managedArray = new byte[width[0] * height[0] * 4];
+				Marshal.Copy(pinnedPixels, managedArray, 0, width[0] * height[0] * 4);
 				
 				m.texture_Data = managedArray;
 				StbPlugin.export_stbi_image_free(pinnedPixels);

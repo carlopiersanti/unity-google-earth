@@ -73,11 +73,6 @@ public class main : MonoBehaviour
 		mainCamera.transform.position = UnityEngine.Vector3.zero;
 		mainCamera.transform.LookAt(-lookAt, up);
 		mainCamera.transform.position = position;*/
-
-		Debug.LogError("----------------------------------------");
-		Debug.LogError(mainCamera.transform.position);
-		Debug.LogError(-mainCamera.transform.forward);
-
 	}
 
 	string[] octs = new string[] { "0", "1", "2", "3", "4", "5", "6", "7" };
@@ -441,8 +436,8 @@ public class main : MonoBehaviour
 			// buffer, bind, draw
 			foreach (var mesh in node.meshes)
 			{
-				if (!mesh.buffered) rocktree_gl.bufferMesh(mesh);
-				rocktree_gl.bindAndDrawMesh(mainCamera, tileMaterial, mesh, transform_float, mask_map[full_path]);
+				if (!mesh.buffering) rocktree_gl.bufferMesh(mesh);
+				if (mesh.buffered) rocktree_gl.bindAndDrawMesh(mainCamera, tileMaterial, mesh, transform_float, mask_map[full_path]);
 			}
 			//bufs[full_path] = node;
 		}
