@@ -36,7 +36,11 @@ extern "C"
     
     EXPORT Inking::UnityTextureLoader* Inking_TextureLoader_GetInstance();
     
-    EXPORT Inking::TextureLoadAsyncOperation* Inking_TextureLoader_LoadAsync(Inking::UnityTextureLoader* _this, byte* data, const int width, const int height);
+    EXPORT Inking::TextureLoadAsyncOperation* Inking_TextureLoader_LoadAsync(
+        Inking::UnityTextureLoader* _this,
+        byte* data, const int width, const int height,
+        void* computeBufferIndices, byte* pinnedIndices, int indicesLength,
+        void* computeBufferVertex, byte* pinnedVertices, int verticesLength);
 
     EXPORT void Inking_TextureLoader_Update(Inking::UnityTextureLoader* _this);
     

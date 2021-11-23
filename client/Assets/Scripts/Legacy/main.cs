@@ -436,8 +436,8 @@ public class main : MonoBehaviour
 			// buffer, bind, draw
 			foreach (var mesh in node.meshes)
 			{
-				if (!mesh.buffering) rocktree_gl.bufferMesh(mesh);
-				if (mesh.buffered) rocktree_gl.bindAndDrawMesh(mainCamera, tileMaterial, mesh, transform_float, mask_map[full_path]);
+				if (!mesh.buffering) GetComponent<rocktree_gl>().bufferMesh(mesh);
+				if (mesh.buffered) GetComponent<rocktree_gl>().bindAndDrawMesh(mainCamera, tileMaterial, mesh, transform_float, mask_map[full_path]);
 			}
 			//bufs[full_path] = node;
 		}

@@ -72,12 +72,17 @@ extern "C"
         return Inking::UnityTextureLoader::GetInstance();
     }
 
-    Inking::TextureLoadAsyncOperation* Inking_TextureLoader_LoadAsync(Inking::UnityTextureLoader* _this, byte* data, const int width, const int height)
+    Inking::TextureLoadAsyncOperation* Inking_TextureLoader_LoadAsync(
+        Inking::UnityTextureLoader* _this,
+        byte* data, const int width, const int height,
+        void* computeBufferIndices, byte* pinnedIndices, int indicesLength,
+        void* computeBufferVertex, byte* pinnedVertices, int verticesLength)
     {
         if (_this == nullptr)
             return nullptr;
 
-        return _this->LoadAsync(data, width, height);
+        return _this->LoadAsync(data, width, height, computeBufferIndices, pinnedIndices, indicesLength,
+            computeBufferVertex, pinnedVertices, verticesLength);
     }
 
     void Inking_TextureLoader_Update(Inking::UnityTextureLoader* _this)

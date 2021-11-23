@@ -14,7 +14,10 @@ namespace Inking
     class ITextureLoader : public RefCounter
     {
     public:
-        virtual TextureLoadAsyncOperation* LoadAsync(byte* data, const int width, const int height) = 0;
+        virtual TextureLoadAsyncOperation* LoadAsync(
+            byte* data, const int width, const int height,
+            void* computeBufferIndices, byte* pinnedIndices, int indicesLength,
+            void* computeBufferVertex, byte* pinnedVertices, int verticesLength) = 0;
 
         virtual void Update() = 0;
 

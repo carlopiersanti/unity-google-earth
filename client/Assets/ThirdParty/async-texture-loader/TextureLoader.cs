@@ -21,10 +21,18 @@ namespace Inking
 
 #if UNITY_STANDALONE_WIN || UNITY_EDITOR
         [DllImport(DllName)]
-        static extern IntPtr Inking_TextureLoader_LoadAsync(IntPtr _native, IntPtr data, int width, int height);
+        static extern IntPtr Inking_TextureLoader_LoadAsync(
+            IntPtr _native,
+            IntPtr data, int width, int height,
+            IntPtr computeBufferIndices, IntPtr pinnedIndices, int indicesLength,
+            IntPtr computeBufferVertex, IntPtr pinnedVertices, int verticesLength);
 #else
         [DllImport(DllName)]
-        static extern IntPtr Inking_TextureLoader_LoadAsync(IntPtr _native, IntPtr data, int width, int height);
+        static extern IntPtr Inking_TextureLoader_LoadAsync(
+            IntPtr _native,
+            IntPtr data, int width, int height,
+            IntPtr computeBufferIndices, IntPtr pinnedIndices, int indicesLength,
+            IntPtr computeBufferVertex, IntPtr pinnedVertices, int verticesLength);
 #endif
         [DllImport(DllName)]
         static extern void Inking_TextureLoader_Update(IntPtr native);
@@ -67,10 +75,18 @@ namespace Inking
             GL.IssuePluginEvent(GetRenderEventFunc(), 1);
         }
 
-        public TextureLoadAsyncOperation LoadAsync(IntPtr data, int width, int height)
+        public TextureLoadAsyncOperation LoadAsync(
+            IntPtr data, int width, int height,
+            IntPtr computeBufferIndices, IntPtr pinnedIndices, int indicesLength,
+            IntPtr computeBufferVertex, IntPtr pinnedVertices, int verticesLength)
         {
-            IntPtr ptr = Inking_TextureLoader_LoadAsync(_native, data, width, height);
-            var operation = new TextureLoadAsyncOperation(ptr);
+            IntPtr ptr = Inking_TextureLoader_LoadAsync(
+                _native, data, width, height,
+                computeBufferIndices, pinnedIndices, indicesLength,
+                computeBufferVertex, pinnedVertices, verticesLength);
+            var operation = new TextureLoadAsyncOperation(ptr, data, width, height,
+                computeBufferIndices, pinnedIndices, indicesLength,
+                computeBufferVertex, pinnedVertices, verticesLength);
             return operation;
         }
 
@@ -79,9 +95,16 @@ namespace Inking
             Inking_TextureLoader_Update(_native);
         }
 
-        IEnumerator _LoadAsync(IntPtr data, int width, int height, Action<Texture2D> onLoadSucceed, Action onLoadFailed)
+        IEnumerator _LoadAsync(
+            IntPtr data, int width, int height,
+            IntPtr computeBufferIndices, IntPtr pinnedIndices, int indicesLength,
+            IntPtr computeBufferVertex, IntPtr pinnedVertices, int verticesLength,
+            Action<Texture2D> onLoadSucceed, Action onLoadFailed)
         {
-            var operation = LoadAsync(data, width, height);
+            var operation = LoadAsync(
+                data, width, height,
+                computeBufferIndices, pinnedIndices, indicesLength,
+                computeBufferVertex, pinnedVertices, verticesLength);
 
             yield return operation;
 
@@ -93,14 +116,23 @@ namespace Inking
             }
             else
             {
+                Debug.LogError(operation.state);
                 if(onLoadFailed != null)
                     onLoadFailed.Invoke();
             }
         }
 
-        public void LoadAsync(IntPtr data, int width, int height, Action<Texture2D> onLoadSucceed, Action onLoadFailed)
+        public void LoadAsync(
+            IntPtr data, int width, int height,
+            IntPtr computeBufferIndices, IntPtr pinnedIndices, int indicesLength,
+            IntPtr computeBufferVertex, IntPtr pinnedVertices, int verticesLength,
+            Action<Texture2D> onLoadSucceed, Action onLoadFailed)
         {
-            StartCoroutine(_LoadAsync(data, width, height, onLoadSucceed, onLoadFailed));
+            StartCoroutine(_LoadAsync(
+                data, width, height,
+                computeBufferIndices, pinnedIndices, indicesLength,
+                computeBufferVertex, pinnedVertices, verticesLength,
+                onLoadSucceed, onLoadFailed));
         }
     }
 }

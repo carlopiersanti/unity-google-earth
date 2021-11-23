@@ -21,12 +21,18 @@ namespace Inking
     public:
         static IUnityInterfaces* g_unityInterfaces;
 
-        virtual TextureLoadAsyncOperation* LoadAsync(byte * data, const int width, const int height)
+        virtual TextureLoadAsyncOperation* LoadAsync(
+            byte * data, const int width, const int height,
+            void* computeBufferIndices, byte* pinnedIndices, int indicesLength,
+            void* computeBufferVertex, byte* pinnedVertices, int verticesLength)
         {
             if (_impl == nullptr)
                 return nullptr;
 
-            return _impl->LoadAsync(data, width, height);
+            return _impl->LoadAsync(
+                data, width, height,
+                computeBufferIndices, pinnedIndices, indicesLength,
+                computeBufferVertex, pinnedVertices, verticesLength);
         }
 
         virtual void Update()

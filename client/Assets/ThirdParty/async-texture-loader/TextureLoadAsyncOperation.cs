@@ -8,6 +8,11 @@ namespace Inking
 {
     public class TextureLoadAsyncOperation : CustomYieldInstruction
     {
+        IntPtr data;
+            int width; int height;
+        IntPtr computeBufferIndices; IntPtr pinnedIndices; int indicesLength;
+        IntPtr computeBufferVertex; IntPtr pinnedVertices; int verticesLength;
+
         [DllImport(TextureLoader.DllName)]
         static extern IntPtr Inking_TextureLoadAsyncOperation_New();
 
@@ -27,9 +32,20 @@ namespace Inking
             _native = Inking_TextureLoadAsyncOperation_New();
         }
 
-        public TextureLoadAsyncOperation(IntPtr native)
+        public TextureLoadAsyncOperation(IntPtr native, IntPtr data, int width, int height,
+            IntPtr computeBufferIndices, IntPtr pinnedIndices, int indicesLength,
+            IntPtr computeBufferVertex, IntPtr pinnedVertices, int verticesLength)
         {
             _native = native;
+            this.data = data;
+            this.width = width;
+            this.height = height;
+            this.computeBufferIndices = computeBufferIndices;
+            this.pinnedIndices = pinnedIndices;
+            this.indicesLength = indicesLength;
+            this.computeBufferVertex = computeBufferVertex;
+            this.pinnedVertices = pinnedVertices;
+            this.verticesLength = verticesLength;
         }
 
         ~TextureLoadAsyncOperation()

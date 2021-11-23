@@ -12,6 +12,7 @@ namespace Inking
     class TextureLoaderD3D11 : public ITextureLoader
     {
         ID3D11Device* _device = NULL;
+        ID3D11DeviceContext* _context = NULL;
 
         void Load(TextureLoadAsyncOperation* operation);
 
@@ -34,7 +35,10 @@ namespace Inking
 
         void LoadShared(TextureLoadAsyncOperation* operation);
 
-        TextureLoadAsyncOperation* LoadAsync(byte* data, const int width, const int height );
+        TextureLoadAsyncOperation* LoadAsync(
+            byte* data, const int width, const int height,
+            void* computeBufferIndices, byte* pinnedIndices, int indicesLength,
+            void* computeBufferVertex, byte* pinnedVertices, int verticesLength);
 
         virtual void Update();
 

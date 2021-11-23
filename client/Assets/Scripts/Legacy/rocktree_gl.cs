@@ -8,51 +8,75 @@ using static rocktree_t.node_t.mesh_t;
 public class rocktree_gl : MonoBehaviour
 {
 
-	public static void unbufferMesh(rocktree_t.node_t.mesh_t mesh)
+	public void unbufferMesh(rocktree_t.node_t.mesh_t mesh)
 	{
 		mesh.computeBufferIndices.Dispose();
 		mesh.computeBufferVertex.Dispose();
 		Destroy(mesh.texture);
 	}
 
+	private int nbSimultaneous = 0;
+	private int maxNbSimultaneous = 20;
 
 
-	public static void bufferMesh(rocktree_t.node_t.mesh_t mesh)
+	public void bufferMesh(rocktree_t.node_t.mesh_t mesh)
 	{
-		mesh.buffering = true;
-		
-		mesh.computeBufferIndices = new ComputeBuffer(mesh.indices.Length, sizeof(int));
-		mesh.computeBufferVertex = new ComputeBuffer ( mesh.vertices.Length, vertex_t.SizeOf() );
+		if (nbSimultaneous >= maxNbSimultaneous)
+			return;
 
-		mesh.computeBufferIndices.SetData(mesh.indices);
-		mesh.computeBufferVertex.SetData(mesh.vertices);
+		mesh.buffering = true;
+		nbSimultaneous++;
+
+		mesh.computeBufferIndices = new ComputeBuffer(mesh.indices.Length, sizeof(int));
+		mesh.computeBufferVertex = new ComputeBuffer(mesh.vertices.Length, vertex_t.SizeOf());
+
+		/*mesh.computeBufferIndices.SetData(mesh.indices);
+		mesh.computeBufferVertex.SetData(mesh.vertices);*/
 
 		GCHandle pinnedData = GCHandle.Alloc(mesh.texture_Data, GCHandleType.Pinned);
+		GCHandle pinnedIndices = GCHandle.Alloc(mesh.indices, GCHandleType.Pinned);
+		GCHandle pinnedVertices = GCHandle.Alloc(mesh.vertices, GCHandleType.Pinned);
+
+
+
 		if (mesh.texture_format == rocktree_t.texture_format.texture_format_rgb)
-        {
-			TextureLoader.Instance.LoadAsync(pinnedData.AddrOfPinnedObject(), mesh.texture_width, mesh.texture_height, (texture) =>
-			{
-				mesh.texture = texture.ToUnityTexture2D();
-				pinnedData.Free();
-				mesh.buffered = true;
-			}, () =>
-			{
-				pinnedData.Free();
-				Debug.LogError("Load Failed : ");
-			});
+		{
+			TextureLoader.Instance.LoadAsync(
+				pinnedData.AddrOfPinnedObject(), mesh.texture_width, mesh.texture_height,
+				mesh.computeBufferIndices.GetNativeBufferPtr(), pinnedIndices.AddrOfPinnedObject(), mesh.indices.Length * sizeof(int),
+				mesh.computeBufferVertex.GetNativeBufferPtr(), pinnedVertices.AddrOfPinnedObject(), mesh.vertices.Length * vertex_t.SizeOf(),
+				(texture) =>
+				{
+					Debug.LogError("OK");
+					mesh.texture = texture.ToUnityTexture2D();
+					pinnedData.Free();
+					pinnedIndices.Free();
+					pinnedVertices.Free();
+					nbSimultaneous--;
+					mesh.buffered = true;
+				}, () =>
+				{
+					Debug.LogError("KO");
+
+					pinnedData.Free();
+					pinnedIndices.Free();
+					pinnedVertices.Free();
+					nbSimultaneous--;
+					Debug.LogError("Load Failed : ");
+				});
 		}
 		else if (mesh.texture_format == rocktree_t.texture_format.texture_format_dxt1)
-        {
+		{
 			Debug.LogError("NOT OPTIMIZED TEXTURE FORMAT, THIS COULD CAUSE LAGS");
 			mesh.texture = new UnityEngine.Texture2D(mesh.texture_width, mesh.texture_height, TextureFormat.DXT1Crunched, false);
 			mesh.buffered = true;
+			nbSimultaneous--;
 		}
-
-
 
 	}
 
-	public static void bindAndDrawMesh(Camera camera, Material material, rocktree_t.node_t.mesh_t mesh, UnityEngine.Matrix4x4 transform_float, byte mask_map)
+
+	public void bindAndDrawMesh(Camera camera, Material material, rocktree_t.node_t.mesh_t mesh, UnityEngine.Matrix4x4 transform_float, byte mask_map)
     {
 		MaterialPropertyBlock block = new MaterialPropertyBlock();
 		block.SetMatrix("transform", transform_float);

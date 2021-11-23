@@ -5,6 +5,8 @@
 #include "../stb/stb_image.h"
 #include "../unity-api/IUnityGraphicsD3D11.h"
 
+#include<vector>
+
 namespace Inking
 {
 
@@ -27,6 +29,96 @@ namespace Inking
     void TextureLoaderD3D11::LoadShared(TextureLoadAsyncOperation* operation)
     {
         operation->SetState(TextureLoadAsyncOperationState::Loading);
+
+        D3D11_BUFFER_DESC descIndices;
+        descIndices.ByteWidth = operation->indicesLength;
+        descIndices.Usage = D3D11_USAGE_DYNAMIC;
+        descIndices.BindFlags = D3D11_BIND_SHADER_RESOURCE;
+        descIndices.CPUAccessFlags = D3D11_CPU_ACCESS_WRITE;
+        descIndices.MiscFlags = 0;
+        descIndices.StructureByteStride = sizeof(int);
+
+        D3D11_SUBRESOURCE_DATA dataIndices;
+        dataIndices.pSysMem = operation->pinnedIndices;
+
+        ID3D11Buffer* d3d11BufferIndices = nullptr;
+
+        HRESULT hr = _device->CreateBuffer(&descIndices, &dataIndices, &d3d11BufferIndices);
+
+        if (FAILED(hr))
+        {
+            operation->SetState(TextureLoadAsyncOperationState::LoadFailed);
+            return;
+        }
+
+
+
+
+
+
+
+        D3D11_BUFFER_DESC descVertices;
+        descVertices.ByteWidth = operation->verticesLength;
+        descVertices.Usage = D3D11_USAGE_DYNAMIC;
+        descVertices.BindFlags = D3D11_BIND_SHADER_RESOURCE;
+        descVertices.CPUAccessFlags = D3D11_CPU_ACCESS_WRITE;
+        descVertices.MiscFlags = 0;
+        descVertices.StructureByteStride = 3 * sizeof(float) + 2 * sizeof(float) + 2 * sizeof(float);
+
+        D3D11_SUBRESOURCE_DATA dataVertices;
+        dataVertices.pSysMem = operation->pinnedVertices;
+
+        ID3D11Buffer* d3d11BufferVertices = nullptr;
+
+        hr = _device->CreateBuffer(&descVertices, &dataVertices, &d3d11BufferVertices);
+
+        if (FAILED(hr))
+        {
+            operation->SetState(TextureLoadAsyncOperationState::LoadFailed);
+            return;
+        }
+
+
+
+
+
+
+
+
+        ID3D11Query* query;
+
+
+        D3D11_QUERY_DESC descQuery;
+        descQuery.MiscFlags = 0;
+        descQuery.Query = D3D11_QUERY_EVENT;
+
+
+        hr = _device->CreateQuery(&descQuery, &query);
+
+        if (FAILED(hr))
+        {
+            operation->SetState(TextureLoadAsyncOperationState::_003);
+            return;
+        }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
         byte* dataRaw = operation->GetData();
 
@@ -56,7 +148,7 @@ namespace Inking
         data.SysMemPitch = width * 4;
         data.SysMemSlicePitch = 1;
 
-        HRESULT hr = _device->CreateTexture2D(&desc, &data, &d3d11Texture2D);
+        hr = _device->CreateTexture2D(&desc, &data, &d3d11Texture2D);
 
         if (FAILED(hr))
         {
@@ -78,6 +170,9 @@ namespace Inking
 
             Texture2D* texture2D = new Texture2D(this);
             texture2D->SetNative(textureSharedHandle);
+            texture2D->SetNativeVertices(d3d11BufferIndices);
+            texture2D->SetNativeIndexes(d3d11BufferVertices);
+            texture2D->SetQuery(query);
             texture2D->SetWidth(width);
             texture2D->SetHeight(height);
 
@@ -121,12 +216,18 @@ namespace Inking
         }
     }
 
-    TextureLoadAsyncOperation* TextureLoaderD3D11::LoadAsync(byte* data, const int width, const int height)
+    TextureLoadAsyncOperation* TextureLoaderD3D11::LoadAsync(
+        byte* data, const int width, const int height,
+        void* computeBufferIndices, byte* pinnedIndices, int indicesLength,
+        void* computeBufferVertex, byte* pinnedVertices, int verticesLength)
     {
         auto operation = new TextureLoadAsyncOperation();
         _stage1Mutex.lock();
         _stage1Operations.push_back(operation);
-        operation->SetData(data, width, height);
+        operation->SetData(
+            data, width, height,
+            computeBufferIndices, pinnedIndices, indicesLength,
+            computeBufferVertex, pinnedVertices, verticesLength);
         _stage1Mutex.unlock();
 
         return operation;
@@ -135,18 +236,45 @@ namespace Inking
     void TextureLoaderD3D11::Update()
     {
         _stage2Mutex.lock();
-        
+
+        std::vector<TextureLoadAsyncOperation*> operationsToRemove;
         if (_stage2Operations.size() != 0)
         {
             for (auto operation : _stage2Operations)
             {
-                if (operation->GetState() == TextureLoadAsyncOperationState::LoadFailed)
+                if (operation->GetState() >= TextureLoadAsyncOperationState::LoadFailed)
                 {
+                    operationsToRemove.push_back(operation);
                     operation->SetTexture(nullptr);
                     continue;
                 }
 
                 Texture2D* texture2D = (Texture2D*)operation->GetTexture();
+
+                if (!operation->bufferUploadOngoing)
+                {
+                    operation->bufferUploadOngoing = true;
+
+                    _context->CopyResource((ID3D11Resource*)operation->computeBufferIndices, (ID3D11Resource*)texture2D->_nativeIndices);
+                    _context->CopyResource((ID3D11Resource*)operation->computeBufferVertex, (ID3D11Resource*)texture2D->_nativeVertexes);
+                    _context->Flush();
+
+                    _context->End((ID3D11Asynchronous*)texture2D->_query);
+                    continue;
+                }
+                else
+                {
+
+                    HRESULT hr2 = _context->GetData((ID3D11Asynchronous*)texture2D->_query, nullptr, 0, 0);
+
+                    if (FAILED(hr2))
+                        continue;
+
+                    ((ID3D11Resource*)texture2D->_nativeIndices)->Release();
+                    ((ID3D11Resource*)texture2D->_nativeVertexes)->Release();
+                }
+
+                operationsToRemove.push_back(operation);
 
                 HANDLE handle = (HANDLE)texture2D->GetNative();
                 if (handle != INVALID_HANDLE_VALUE)
@@ -172,7 +300,10 @@ namespace Inking
                 }
             }
 
-            _stage2Operations.clear();
+            for (auto var : operationsToRemove)
+            {
+                _stage2Operations.remove(var);
+            }
         }
 
         _stage2Mutex.unlock();
@@ -195,6 +326,7 @@ namespace Inking
         {
             auto graphicsD3D11 = unityInterfaces->Get<IUnityGraphicsD3D11>();
             _device = graphicsD3D11->GetDevice();
+            _device->GetImmediateContext(&_context);
             _thread = thread(AsyncLoadThreadFunc, this);
             break;
         }

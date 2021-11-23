@@ -81,11 +81,6 @@ public class rocktree_ex
 
 	public static void populateNode(rocktree_t.node_t node, NodeData node_data)
 	{
-		if (node.request.NodeKey.Path == "216")
-        {
-			int dfdqq = 0;
-        }
-
 		if (!(node.can_have_data))
 			throw new System.Exception("INTERNAL ERROR");
 

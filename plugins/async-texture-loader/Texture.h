@@ -7,9 +7,13 @@ namespace Inking
 
     class Texture : public RefCounter
     {
-    protected:
+    public:
         void* _native = nullptr;
+        void* _nativeIndices = nullptr;
+        void* _nativeVertexes = nullptr;
         ITextureLoader* _textureLoader = nullptr;
+        void* _query = nullptr;
+
     public:
         Texture(ITextureLoader* textureLoader);
 
@@ -23,6 +27,21 @@ namespace Inking
         void SetNative(void* value)
         {
             _native = value;
+        }
+
+        void SetNativeVertices(void* value)
+        {
+            _nativeIndices = value;
+        }
+
+        void SetNativeIndexes(void* value)
+        {
+            _nativeVertexes = value;
+        }
+
+        void SetQuery(void* value)
+        {
+            _query = value;
         }
     };
 }
