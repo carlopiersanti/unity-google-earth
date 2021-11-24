@@ -3,6 +3,7 @@ using System;
 using System.Collections;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.Threading;
 using UnityEngine;
 using static rocktree_decoder;
 using static rocktree_http;
@@ -82,10 +83,10 @@ public class rocktree_util
 
 		Action<FetchResult> thunk = (FetchResult result) =>
 		{
-			var cb = mapPlanetoid[result.i];		
-  			if (result.error != 0)
+			var cb = result.i2;		
+  			if (result.error != null)
 			{
-				Debug.LogError("could not load planetoid");
+				Debug.LogError("could not load planetoid" + result.error.ToString());
 				cb(null);
 			}
 			else
@@ -97,13 +98,9 @@ public class rocktree_util
 		};
 
 		mapPlanetoid[++indexPlanetoid] = cb;
-		rocktree_http.fetchData("PlanetoidMetadata", indexPlanetoid, thunk);
+		rocktree_http.fetchData("PlanetoidMetadata", null, cb, null, thunk);
 	}
 
-	static ConcurrentDictionary<int, Tuple<Action<BulkMetadata>, rocktree_t.bulk_t>> mapBulk =
-		new ConcurrentDictionary<int, Tuple<Action<BulkMetadata>, rocktree_t.bulk_t>>();
-
-	static int indexBulk = 0;
 
 	// getBulk fetches a bulk using path and epoch from web or cache and calls cb when it's done.
 	public static void getBulk(BulkMetadataRequest req, rocktree_t.bulk_t b, Action<BulkMetadata> cb)
@@ -113,13 +110,12 @@ public class rocktree_util
 
 		Action<FetchResult> thunk = (FetchResult result) =>
 		{
-			mapBulk.TryRemove(result.i, out var pair);
-			var cb = pair.Item1;
-			var b = pair.Item2;
+			var cb = result.i.Item1;
+			var b = result.i.Item2;
 
-			if (result.error != 0)
+			if (result.error != null)
             {
-				Debug.LogError("could not load node");
+				Debug.LogError("could not load node" + result.error.ToString() );
 				cb(null);
 			}
 			else
@@ -143,9 +139,8 @@ public class rocktree_util
 
 
 		var url_buf = "BulkMetadata/pb=!1m2!1s" + path + "!2u" + epoch;
-		++indexBulk;
-		mapBulk[indexBulk] = new Tuple<Action<BulkMetadata>, rocktree_t.bulk_t>(cb, b);
-		fetchData(url_buf, indexBulk, thunk);
+
+		rocktree_http.queue.EnqueueTask(() => fetchData(url_buf, new Tuple<Action<BulkMetadata>, rocktree_t.bulk_t>(cb, b), null, null, thunk));
 	}
 
 	static ConcurrentDictionary<int, Tuple<Action<NodeData>, rocktree_t.node_t>> mapNode =
@@ -159,14 +154,12 @@ public class rocktree_util
 
 		Action<FetchResult> thunk = (FetchResult result) =>
 		{
-			mapNode.TryRemove(result.i, out var pair);
+			var cb = result.i3.Item1;
+			var n = result.i3.Item2;
 
-			var cb = pair.Item1;
-			var n = pair.Item2;
-
-			if (result.error != 0)
+			if (result.error != null)
 			{
-				Debug.LogError("could not load node");
+				Debug.LogError("could not load node" + result.error.ToString());
 				cb(null);
 			}
 			else
@@ -204,7 +197,8 @@ public class rocktree_util
 
 		++indexNode;
 		mapNode[indexNode] = new Tuple<Action<NodeData>, rocktree_t.node_t>(cb, n);
-		fetchData(url_buf, indexNode, thunk);
+
+		rocktree_http.queue.EnqueueTask(() => fetchData(url_buf, null, null, new Tuple<Action<NodeData>, rocktree_t.node_t>(cb, n), thunk));
 	}
 
 	class llbounds_t

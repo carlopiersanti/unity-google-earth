@@ -16,7 +16,7 @@ public class rocktree_gl : MonoBehaviour
 	}
 
 	private int nbSimultaneous = 0;
-	private int maxNbSimultaneous = 20;
+	private int maxNbSimultaneous = 5;
 
 
 	public void bufferMesh(rocktree_t.node_t.mesh_t mesh)
@@ -47,7 +47,6 @@ public class rocktree_gl : MonoBehaviour
 				mesh.computeBufferVertex.GetNativeBufferPtr(), pinnedVertices.AddrOfPinnedObject(), mesh.vertices.Length * vertex_t.SizeOf(),
 				(texture) =>
 				{
-					Debug.LogError("OK");
 					mesh.texture = texture.ToUnityTexture2D();
 					pinnedData.Free();
 					pinnedIndices.Free();
@@ -56,8 +55,6 @@ public class rocktree_gl : MonoBehaviour
 					mesh.buffered = true;
 				}, () =>
 				{
-					Debug.LogError("KO");
-
 					pinnedData.Free();
 					pinnedIndices.Free();
 					pinnedVertices.Free();

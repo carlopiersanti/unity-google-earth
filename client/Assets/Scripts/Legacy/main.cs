@@ -17,8 +17,18 @@ public class main : MonoBehaviour
     {
 		ServicePointManager.DefaultConnectionLimit = 20000;
 
+		
+
+		StartCoroutine(Load());
+	}
+	
+	IEnumerator Load()
+    {
+		yield return new WaitForSecondsRealtime(3.0f);
+
 		loadPlanet();
 	}
+
 
     private void Update()
     {
@@ -31,9 +41,11 @@ public class main : MonoBehaviour
         planetoid.downloaded.Value = false;
         _planetoid = planetoid;
 
+		rocktree_http.simultaneousRequests++;
         rocktree_util.getPlanetoid((PlanetoidMetadata _metadata) =>
         {
-            if (_metadata == null)
+			rocktree_http.simultaneousRequests--;
+			if (_metadata == null)
             {
                 Debug.LogError("NO PLANETOID");
                 return;
@@ -46,7 +58,8 @@ public class main : MonoBehaviour
 
             bulk.setStartedDownloading();
 
-            rocktree_util.getBulk(bulk.request, bulk, (cb) => { });
+			rocktree_http.simultaneousRequests++;
+			rocktree_util.getBulk(bulk.request, bulk, (cb) => { rocktree_http.simultaneousRequests--; });
         });
     }
 
@@ -199,8 +212,12 @@ public class main : MonoBehaviour
 					potential_bulks[cur] = b;
 					if (b.dl_state.Value == dl_state.dl_state_stub)
 					{
-						b.setStartedDownloading();
-						rocktree_util.getBulk(b.request, b, (cb) => { });
+						if ( rocktree_http.simultaneousRequests < rocktree_http.maxRequests)
+                        {
+							rocktree_http.simultaneousRequests++;
+							b.setStartedDownloading();
+							rocktree_util.getBulk(b.request, b, (cb) => { rocktree_http.simultaneousRequests--; });
+						}
 					}
 					if (b.dl_state.Value != dl_state.dl_state_downloaded) continue;
 					bulk = b;
@@ -304,8 +321,12 @@ public class main : MonoBehaviour
 			var node = kv.Value;
 			if (node.dl_state.Value == dl_state.dl_state_stub)
 			{
-				node.setStartedDownloading();
-				rocktree_util.getNode(node.request, node, node => { });
+				if (rocktree_http.simultaneousRequests < rocktree_http.maxRequests)
+                {
+					rocktree_http.simultaneousRequests++;
+					node.setStartedDownloading();
+					rocktree_util.getNode(node.request, node, node => { rocktree_http.simultaneousRequests--; });
+				}
 			}
 		}
 
