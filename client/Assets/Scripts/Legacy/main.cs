@@ -1,9 +1,11 @@
+using FFmpeg;
 using GeoGlobetrotterProtoRocktree;
 using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using System.Net;
+using System.Threading;
 using UnityEngine;
 
 public class main : MonoBehaviour
@@ -13,7 +15,10 @@ public class main : MonoBehaviour
 
 	static rocktree_t _planetoid = null;
 
-    private void Awake()
+	TripleBuffer potential_nodes_triple_buffer = new TripleBuffer();
+
+
+	private void Awake()
     {
 		ServicePointManager.DefaultConnectionLimit = 20000;
 
@@ -62,7 +67,7 @@ public class main : MonoBehaviour
 			rocktree_util.getBulk(bulk.request, bulk, (cb) => { rocktree_http.simultaneousRequests--; });
         });
     }
-
+	Thread t = null;
     private void Start()
     {
 		/*Vector3 eye = new Vector3();
@@ -86,12 +91,19 @@ public class main : MonoBehaviour
 		mainCamera.transform.position = UnityEngine.Vector3.zero;
 		mainCamera.transform.LookAt(-lookAt, up);
 		mainCamera.transform.position = position;*/
+
+
 	}
 
 	string[] octs = new string[] { "0", "1", "2", "3", "4", "5", "6", "7" };
 
 
 	public float speed_amp;
+	Matrix viewprojection;
+	UnityEngine.Vector3 mainCameraPosition;
+	UnityEngine.Vector3 mainCameraForward;
+
+	SortedDictionary<string, rocktree_t.node_t> read;
 
 	void drawPlanet()
 	{
@@ -177,159 +189,15 @@ public class main : MonoBehaviour
 		Matrix4x4 view = new Matrix4x4(mainCamera.transform.worldToLocalMatrix);
 		Matrix4x4 projection = new Matrix4x4(projectionUnity);
 
-		var viewprojection = (Matrix)projection * (Matrix)view;
+		viewprojection = (Matrix)projection * (Matrix)view;
+		mainCameraPosition = mainCamera.transform.position;
+		mainCameraForward = mainCamera.transform.forward;
 
-		//DEBUG FROM THIS POINT
-		var frustum_planes = rocktree_math.getFrustumPlanes(viewprojection); // for obb culling
-		List<Tuple<string, rocktree_t.bulk_t>> valid = new List<Tuple<string, rocktree_t.bulk_t>> { new Tuple<string, rocktree_t.bulk_t>("",current_bulk) };
-
-		List<Tuple<string, rocktree_t.bulk_t>> next_valid = new List<Tuple<string, rocktree_t.bulk_t>>();
-		SortedDictionary < string, rocktree_t.node_t> potential_nodes = new SortedDictionary<string, rocktree_t.node_t>();
-		//std::multimap<double, rocktree_t::node_t *> dist_nodes;
-
-		// todo: improve download order
-		// todo: abort emscripten_fetch_close() https://emscripten.org/docs/api_reference/fetch.html
-		//       and/or emscripten coroutine fetch semaphore	
-		// todo: purge branches less aggressively	
-		// todo: workers instead of shared mem https://emscripten.org/docs/api_reference/emscripten.h.html#worker-api	
-
-		Dictionary < string, rocktree_t.bulk_t> potential_bulks = new Dictionary<string, rocktree_t.bulk_t> ();
-
-		// node culling and level of detail using breadth-first search
-		for (; ; )
-		{
-			foreach (var cur2 in valid)
-			{
-				var cur = cur2.Item1;
-				var bulk = cur2.Item2;
-
-				if (cur.Length > 0 && cur.Length % 4 == 0)
-				{
-					var rel = cur.Substring((int)Math.Floor((decimal)(cur.Length - 1) / 4) * 4, 4);
-					var has_bulk = bulk.bulks.TryGetValue(rel, out var b);
-					if (!has_bulk)
-						continue;
-					potential_bulks[cur] = b;
-					if (b.dl_state.Value == dl_state.dl_state_stub)
-					{
-						if ( rocktree_http.simultaneousRequests < rocktree_http.maxRequests)
-                        {
-							rocktree_http.simultaneousRequests++;
-							b.setStartedDownloading();
-							rocktree_util.getBulk(b.request, b, (cb) => { rocktree_http.simultaneousRequests--; });
-						}
-					}
-					if (b.dl_state.Value != dl_state.dl_state_downloaded) continue;
-					bulk = b;
-				}
-				potential_bulks[cur] = bulk;
-
-				foreach (var o in octs)
-				{
-					var nxt = cur + o;
-					int index = (int)Math.Floor((decimal)(nxt.Length - 1) / 4) * 4;
-					var nxt_rel = nxt.Substring(index, Math.Min(4,nxt.Length-index));
-					if (!bulk.nodes.TryGetValue(nxt_rel, out var node))
-						continue;
-
-					// cull outside frustum using obb
-					// todo: check if it could cull more
-					if (rocktree_math.obb_frustum.obb_frustum_outside == rocktree_math.classifyObbFrustum(node.obb, frustum_planes))
-					{
-						continue;
-					}
-
-					// level of detail
-					/*{
-						auto obb_center = node->obb.center;
-						auto obb_max_diameter = fmax(fmax(node->obb.extents[0], node->obb.extents[1]), node->obb.extents[2]);			
-
-						auto t = Affine3d().Identity();
-						t.translate(Vector3d(obb_center.x(), obb_center.y(), obb_center.z()));
-						t.scale(obb_max_diameter);
-						Matrix4d viewprojection_d;
-						for(auto i = 0; i < 16; i++) viewprojection_d.data()[i] = viewprojection.data()[i];
-						auto m = viewprojection_d * t;
-						auto s = m(3, 3);
-						if (s < 0) s = -s; // ?
-						auto diameter_in_clipspace = 2 * (obb_max_diameter / s);  // *2 because clip space is -1 to +1
-						auto amplify = 4; // todo: meters per texel
-						if (diameter_in_clipspace < 0.5 / amplify) {
-							continue;
-						}
-					}*/
-
-					{
-						var t = new Matrix4x4();
-						var sub = new Vector3();
-						sub.mat[0, 0] = mainCamera.transform.position.x - node.obb.center[0, 0];
-						sub.mat[1, 0] = mainCamera.transform.position.y - node.obb.center[1, 0];
-						sub.mat[2, 0] = mainCamera.transform.position.z - node.obb.center[2, 0];
-						var eye = new Vector3();
-						eye.mat[0, 0] = mainCamera.transform.position.x;
-						eye.mat[1, 0] = mainCamera.transform.position.y;
-						eye.mat[2, 0] = mainCamera.transform.position.z;
-						var fwd = new Vector3();
-						fwd.mat[0, 0] = -mainCamera.transform.forward.x;
-						fwd.mat[1, 0] = -mainCamera.transform.forward.y;
-						fwd.mat[2, 0] = -mainCamera.transform.forward.z;
-						Matrix translation = eye + Math.Sqrt(Math.Pow(sub.mat[0,0],2) + Math.Pow(sub.mat[1, 0], 2) + Math.Pow(sub.mat[2, 0], 2)) * fwd;
-						t.mat[0, 0] = 1;
-						t.mat[1, 1] = 1;
-						t.mat[2, 2] = 1;
-						t.mat[3, 3] = 1;
-
-						t.mat[0, 3] = translation.mat[0, 0];
-						t.mat[1, 3] = translation.mat[1, 0];
-						t.mat[2, 3] = translation.mat[2, 0];
-
-						var m = viewprojection * t;
-						var s = m.mat[3,3];
-						var texels_per_meter = 1.0f / node.meters_per_texel;
-						var wh = 768; // width < height ? width : height;
-						var r = (2.0 * (1.0 / s)) * wh;
-						if (texels_per_meter > r)
-						{
-							continue;
-						}
-					}
-
-					next_valid.Add(new Tuple<string, rocktree_t.bulk_t>(nxt, bulk));
-
-					if (node.can_have_data)
-					{
-						potential_nodes[nxt] = node;
-						//auto d = (node->obb.center - eye).squaredNorm();
-						//dist_nodes[d] = node;
-						//dist_nodes.insert(std::make_pair (d, node));
-					}
-				}
-			}
-			if (next_valid.Count == 0)
-			{
-				break;
-			}
-			valid = next_valid;
-			next_valid = new List<Tuple<string, rocktree_t.bulk_t>>();
-		}	
-
-		foreach (var kv in potential_nodes)
-		{	// normal order
-			//for (auto kv = potential_nodes.rbegin(); kv != potential_nodes.rend(); ++kv) { // reverse order
-			//for (auto kv = dist_nodes.rbegin(); kv != dist_nodes.rend(); ++kv) { // reverse order
-			//for (auto kv = dist_nodes.begin(); kv != dist_nodes.end(); ++kv) { // normal order
-			var node = kv.Value;
-			if (node.dl_state.Value == dl_state.dl_state_stub)
-			{
-				if (rocktree_http.simultaneousRequests < rocktree_http.maxRequests)
-                {
-					rocktree_http.simultaneousRequests++;
-					node.setStartedDownloading();
-					rocktree_util.getNode(node.request, node, node => { rocktree_http.simultaneousRequests--; });
-				}
-			}
+		if (t==null)
+        {
+			t = new Thread(() => { while (true) { ThreadTilesCalculation(); } });
+			t.Start();
 		}
-
 		// unbuffer and obsolete nodes
 		/*List<rocktree_t.bulk_t> x = new List<rocktree_t.bulk_t> { current_bulk };
 		int buf_cnt = 0, obs_n_cnt = 0, total_n = 0;
@@ -402,8 +270,184 @@ public class main : MonoBehaviour
 
 		po(current_bulk);*/
 
+		var read2 = potential_nodes_triple_buffer.GetReadBuffer();
+		if (read2 != null)
+			read = read2;
+
+		if (read != null)
+			DisplayTiles(read, viewprojection);
+	}
+
+	void ThreadTilesCalculation()
+    {
+		var planetoid = _planetoid;
+		if (planetoid == null) return;
+		if (!planetoid.downloaded.Value) return;
+		if (planetoid.root_bulk.dl_state.Value != dl_state.dl_state_downloaded) return;
+		var current_bulk = planetoid.root_bulk;
+		var planet_radius = planetoid.radius;
+
+		var potential_nodes = new SortedDictionary<string, rocktree_t.node_t>();
+
+		 //DEBUG FROM THIS POINT
+		 var frustum_planes = rocktree_math.getFrustumPlanes(viewprojection); // for obb culling
+		List<Tuple<string, rocktree_t.bulk_t>> valid = new List<Tuple<string, rocktree_t.bulk_t>> { new Tuple<string, rocktree_t.bulk_t>("", current_bulk) };
+
+		List<Tuple<string, rocktree_t.bulk_t>> next_valid = new List<Tuple<string, rocktree_t.bulk_t>>();
+		//std::multimap<double, rocktree_t::node_t *> dist_nodes;
+
+		// todo: improve download order
+		// todo: abort emscripten_fetch_close() https://emscripten.org/docs/api_reference/fetch.html
+		//       and/or emscripten coroutine fetch semaphore	
+		// todo: purge branches less aggressively	
+		// todo: workers instead of shared mem https://emscripten.org/docs/api_reference/emscripten.h.html#worker-api	
+
+		Dictionary<string, rocktree_t.bulk_t> potential_bulks = new Dictionary<string, rocktree_t.bulk_t>();
+
+		// node culling and level of detail using breadth-first search
+		for (; ; )
+		{
+			foreach (var cur2 in valid)
+			{
+				var cur = cur2.Item1;
+				var bulk = cur2.Item2;
+
+				if (cur.Length > 0 && cur.Length % 4 == 0)
+				{
+					var rel = cur.Substring((int)Math.Floor((decimal)(cur.Length - 1) / 4) * 4, 4);
+					var has_bulk = bulk.bulks.TryGetValue(rel, out var b);
+					if (!has_bulk)
+						continue;
+					potential_bulks[cur] = b;
+					if (b.dl_state.Value == dl_state.dl_state_stub)
+					{
+						if (rocktree_http.simultaneousRequests < rocktree_http.maxRequests)
+						{
+							rocktree_http.simultaneousRequests++;
+							b.setStartedDownloading();
+							rocktree_util.getBulk(b.request, b, (cb) => { rocktree_http.simultaneousRequests--; });
+						}
+					}
+					if (b.dl_state.Value != dl_state.dl_state_downloaded) continue;
+					bulk = b;
+				}
+				potential_bulks[cur] = bulk;
+
+				foreach (var o in octs)
+				{
+					var nxt = cur + o;
+					int index = (int)Math.Floor((decimal)(nxt.Length - 1) / 4) * 4;
+					var nxt_rel = nxt.Substring(index, Math.Min(4, nxt.Length - index));
+					if (!bulk.nodes.TryGetValue(nxt_rel, out var node))
+						continue;
+
+					// cull outside frustum using obb
+					// todo: check if it could cull more
+					if (rocktree_math.obb_frustum.obb_frustum_outside == rocktree_math.classifyObbFrustum(node.obb, frustum_planes))
+					{
+						continue;
+					}
+
+					// level of detail
+					/*{
+						auto obb_center = node->obb.center;
+						auto obb_max_diameter = fmax(fmax(node->obb.extents[0], node->obb.extents[1]), node->obb.extents[2]);			
+
+						auto t = Affine3d().Identity();
+						t.translate(Vector3d(obb_center.x(), obb_center.y(), obb_center.z()));
+						t.scale(obb_max_diameter);
+						Matrix4d viewprojection_d;
+						for(auto i = 0; i < 16; i++) viewprojection_d.data()[i] = viewprojection.data()[i];
+						auto m = viewprojection_d * t;
+						auto s = m(3, 3);
+						if (s < 0) s = -s; // ?
+						auto diameter_in_clipspace = 2 * (obb_max_diameter / s);  // *2 because clip space is -1 to +1
+						auto amplify = 4; // todo: meters per texel
+						if (diameter_in_clipspace < 0.5 / amplify) {
+							continue;
+						}
+					}*/
+
+					{
+						var t = new Matrix4x4();
+						var sub = new Vector3();
+						sub.mat[0, 0] = mainCameraPosition.x - node.obb.center[0, 0];
+						sub.mat[1, 0] = mainCameraPosition.y - node.obb.center[1, 0];
+						sub.mat[2, 0] = mainCameraPosition.z - node.obb.center[2, 0];
+						var eye = new Vector3();
+						eye.mat[0, 0] = mainCameraPosition.x;
+						eye.mat[1, 0] = mainCameraPosition.y;
+						eye.mat[2, 0] = mainCameraPosition.z;
+						var fwd = new Vector3();
+						fwd.mat[0, 0] = -mainCameraForward.x;
+						fwd.mat[1, 0] = -mainCameraForward.y;
+						fwd.mat[2, 0] = -mainCameraForward.z;
+						Matrix translation = eye + Math.Sqrt(Math.Pow(sub.mat[0, 0], 2) + Math.Pow(sub.mat[1, 0], 2) + Math.Pow(sub.mat[2, 0], 2)) * fwd;
+						t.mat[0, 0] = 1;
+						t.mat[1, 1] = 1;
+						t.mat[2, 2] = 1;
+						t.mat[3, 3] = 1;
+
+						t.mat[0, 3] = translation.mat[0, 0];
+						t.mat[1, 3] = translation.mat[1, 0];
+						t.mat[2, 3] = translation.mat[2, 0];
+
+						var m = viewprojection * t;
+						var s = m.mat[3, 3];
+						var texels_per_meter = 1.0f / node.meters_per_texel;
+						var wh = 768; // width < height ? width : height;
+						var r = (2.0 * (1.0 / s)) * wh;
+						if (texels_per_meter > r)
+						{
+							continue;
+						}
+					}
+
+					next_valid.Add(new Tuple<string, rocktree_t.bulk_t>(nxt, bulk));
+
+					if (node.can_have_data)
+					{
+						potential_nodes[nxt] = node;
+						//auto d = (node->obb.center - eye).squaredNorm();
+						//dist_nodes[d] = node;
+						//dist_nodes.insert(std::make_pair (d, node));
+					}
+				}
+			}
+			if (next_valid.Count == 0)
+			{
+				break;
+			}
+			valid = next_valid;
+			next_valid = new List<Tuple<string, rocktree_t.bulk_t>>();
+		}
+
+		foreach (var kv in potential_nodes)
+		{   // normal order
+			//for (auto kv = potential_nodes.rbegin(); kv != potential_nodes.rend(); ++kv) { // reverse order
+			//for (auto kv = dist_nodes.rbegin(); kv != dist_nodes.rend(); ++kv) { // reverse order
+			//for (auto kv = dist_nodes.begin(); kv != dist_nodes.end(); ++kv) { // normal order
+			var node = kv.Value;
+			if (node.dl_state.Value == dl_state.dl_state_stub)
+			{
+				if (rocktree_http.simultaneousRequests < rocktree_http.maxRequests)
+				{
+					rocktree_http.simultaneousRequests++;
+					node.setStartedDownloading();
+					rocktree_util.getNode(node.request, node, node => { rocktree_http.simultaneousRequests--; });
+				}
+			}
+		}
+
+		potential_nodes_triple_buffer.SwapWriteBuffer(potential_nodes);
+	}
+
+
+
+	void DisplayTiles(SortedDictionary<string, rocktree_t.node_t> potential_nodes, Matrix viewprojection)
+    {
 		// 8-bit octant mask flags of nodes
-		Dictionary< string, byte > mask_map = new Dictionary<string, byte>();
+		Dictionary<string, byte> mask_map = new Dictionary<string, byte>();
 
 		foreach (var kv in potential_nodes.Reverse())
 		{ // reverse order
@@ -457,11 +501,17 @@ public class main : MonoBehaviour
 			// buffer, bind, draw
 			foreach (var mesh in node.meshes)
 			{
+				UnityEngine.Profiling.Profiler.BeginSample("003");
 				if (!mesh.buffering) GetComponent<rocktree_gl>().bufferMesh(mesh);
+				UnityEngine.Profiling.Profiler.EndSample();
+
+				UnityEngine.Profiling.Profiler.BeginSample("004");
 				if (mesh.buffered) GetComponent<rocktree_gl>().bindAndDrawMesh(mainCamera, tileMaterial, mesh, transform_float, mask_map[full_path]);
+				UnityEngine.Profiling.Profiler.EndSample();
 			}
 			//bufs[full_path] = node;
 		}
+
 	}
 
 }

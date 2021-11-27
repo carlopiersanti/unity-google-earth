@@ -92,7 +92,10 @@ namespace Inking
 
         public void Update()
         {
+            UnityEngine.Profiling.Profiler.BeginSample("005");
+
             Inking_TextureLoader_Update(_native);
+            UnityEngine.Profiling.Profiler.EndSample();
         }
 
         IEnumerator _LoadAsync(

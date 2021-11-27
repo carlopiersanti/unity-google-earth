@@ -38,7 +38,6 @@ public class rocktree_gl : MonoBehaviour
 		GCHandle pinnedVertices = GCHandle.Alloc(mesh.vertices, GCHandleType.Pinned);
 
 
-
 		if (mesh.texture_format == rocktree_t.texture_format.texture_format_rgb)
 		{
 			TextureLoader.Instance.LoadAsync(
