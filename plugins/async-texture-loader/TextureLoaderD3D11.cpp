@@ -272,6 +272,7 @@ namespace Inking
 
                     ((ID3D11Resource*)texture2D->_nativeIndices)->Release();
                     ((ID3D11Resource*)texture2D->_nativeVertexes)->Release();
+                    ((ID3D11Asynchronous*)texture2D->_query)->Release();
                 }
 
                 operationsToRemove.push_back(operation);
