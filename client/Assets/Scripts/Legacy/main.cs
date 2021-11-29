@@ -103,7 +103,7 @@ public class main : MonoBehaviour
 	UnityEngine.Vector3 mainCameraPosition;
 	UnityEngine.Vector3 mainCameraForward;
 
-	SortedDictionary<string, rocktree_t.node_t> read;
+	Tuple<Dictionary<string, rocktree_t.bulk_t>, SortedDictionary<string, rocktree_t.node_t>> read;
 
 	void drawPlanet()
 	{
@@ -198,77 +198,6 @@ public class main : MonoBehaviour
 			t = new Thread(() => { while (true) { ThreadTilesCalculation(); } });
 			t.Start();
 		}
-		// unbuffer and obsolete nodes
-		/*List<rocktree_t.bulk_t> x = new List<rocktree_t.bulk_t> { current_bulk };
-		int buf_cnt = 0, obs_n_cnt = 0, total_n = 0;
-		while (x.Count != 0)
-		{
-			var cur_bulk = x[0];
-			x.RemoveAt(0);
-			// prepare next iteration
-			foreach (var kv in cur_bulk.bulks)
-			{
-				var b = kv.Value;
-				if (b.dl_state.Value != dl_state.dl_state_downloaded) continue;
-				x.Insert(0, b);
-			}
-			// current iteration
-			foreach (var kv in cur_bulk.nodes)
-			{
-				var n = kv.Value;
-				if (n.dl_state.Value != dl_state.dl_state_downloaded) continue;
-
-				// just count buffers
-				foreach (var m in n.meshes) { if (m.buffered) { buf_cnt++; break; } }
-
-				total_n++;
-				var p = n.request.NodeKey.Path;
-				var has = potential_nodes.ContainsKey(p);
-				if (!has)
-				{
-					// node is obsolete
-					obs_n_cnt++;
-
-					// unbuffer
-					foreach (var mesh in n.meshes)
-					{
-						if (mesh.buffered) rocktree_gl.unbufferMesh(mesh);
-					}
-					// clean up
-					n._data = null;
-					n.matrix_globe_from_mesh = new Matrix4x4();
-					n.meshes.Clear();
-					n.setDeleted();
-				}
-			}
-		}
-
-		// post order dfs purge obsolete bulks
-		int total_b = 0, obs_b_cnt = 0;
-		Action<rocktree_t.bulk_t> po = null;
-		po = (rocktree_t.bulk_t b) =>
-		{
-			foreach (var kv in b.bulks)
-			{
-				var subB = kv.Value;
-				if (subB.dl_state.Value == dl_state.dl_state_downloaded)
-				po(subB);
-			}
-			total_b++;
-			var p = b.request.NodeKey.Path;
-			bool has = potential_bulks.ContainsKey(p);
-			if (!has)
-			{
-				if (b.busy_ctr.Value == 0)
-				{
-					b.nodes.Clear();
-					b.bulks.Clear();
-					b.setDeleted();
-				}
-			}
-		};
-
-		po(current_bulk);*/
 
 		var read2 = potential_nodes_triple_buffer.GetReadBuffer();
 		if (read2 != null)
@@ -439,17 +368,103 @@ public class main : MonoBehaviour
 			}
 		}
 
-		potential_nodes_triple_buffer.SwapWriteBuffer(potential_nodes);
+		potential_nodes_triple_buffer.SwapWriteBuffer(new Tuple<Dictionary<string, rocktree_t.bulk_t>, SortedDictionary<string, rocktree_t.node_t>>(potential_bulks, potential_nodes) );
 	}
 
 
 
-	void DisplayTiles(SortedDictionary<string, rocktree_t.node_t> potential_nodes, Matrix viewprojection)
-    {
-		// 8-bit octant mask flags of nodes
-		Dictionary<string, byte> mask_map = new Dictionary<string, byte>();
+	void DisplayTiles(Tuple<Dictionary<string, rocktree_t.bulk_t>, SortedDictionary<string, rocktree_t.node_t>> potential, Matrix viewprojection)
+	{
+		var planetoid = _planetoid;
+		if (planetoid == null) return;
+		if (!planetoid.downloaded.Value) return;
+		if (planetoid.root_bulk.dl_state.Value != dl_state.dl_state_downloaded) return;
+		var current_bulk = planetoid.root_bulk;
+		var planet_radius = planetoid.radius;
 
-		foreach (var kv in potential_nodes.Reverse())
+		// unbuffer and obsolete nodes
+		List<rocktree_t.bulk_t> x = new List<rocktree_t.bulk_t> { current_bulk };
+		int buf_cnt = 0, obs_n_cnt = 0, total_n = 0;
+		while (x.Count != 0)
+		{
+			var cur_bulk = x[0];
+			x.RemoveAt(0);
+			// prepare next iteration
+			foreach (var kv in cur_bulk.bulks)
+			{
+				var b = kv.Value;
+				if (b.dl_state.Value != dl_state.dl_state_downloaded) continue;
+				x.Insert(0, b);
+			}
+			// current iteration
+			foreach (var kv in cur_bulk.nodes)
+			{
+				var n = kv.Value;
+				if (n.dl_state.Value != dl_state.dl_state_downloaded) continue;
+
+				if (n.meshes.Any( m => m.buffering)) continue;
+
+				// just count buffers
+				foreach (var m in n.meshes) { if (m.buffered) { buf_cnt++; break; } }
+
+				total_n++;
+				var p = n.request.NodeKey.Path;
+				var has = potential.Item2.ContainsKey(p);
+				if (!has)
+				{
+					// node is obsolete
+					obs_n_cnt++;
+
+					// unbuffer
+					foreach (var mesh in n.meshes)
+					{
+						if (mesh.buffered)
+						{
+							GetComponent<rocktree_gl>().unbufferMesh(mesh);
+						}
+					}
+					// clean up
+					n._data = null;
+					n.matrix_globe_from_mesh = new Matrix4x4();
+					n.meshes.Clear();
+					n.setDeleted();
+				}
+			}
+		}
+
+		// post order dfs purge obsolete bulks
+		int total_b = 0, obs_b_cnt = 0;
+		Action<rocktree_t.bulk_t> po = null;
+		po = (rocktree_t.bulk_t b) =>
+		{
+			foreach (var kv in b.bulks)
+			{
+				var subB = kv.Value;
+				if (subB.dl_state.Value == dl_state.dl_state_downloaded)
+					po(subB);
+			}
+			total_b++;
+			var p = b.request.NodeKey.Path;
+			bool has = potential.Item1.ContainsKey(p);
+			if (!has)
+			{
+				if (b.busy_ctr.Value == 0)
+				{
+					b.nodes.Clear();
+					b.bulks.Clear();
+					b.setDeleted();
+				}
+			}
+		};
+
+		po(current_bulk);
+
+
+
+		 // 8-bit octant mask flags of nodes
+		 Dictionary<string, byte> mask_map = new Dictionary<string, byte>();
+
+		foreach (var kv in potential.Item2.Reverse())
 		{ // reverse order
 			var full_path = kv.Key;
 			var node = kv.Value;

@@ -10,9 +10,9 @@ public class rocktree_gl : MonoBehaviour
 
 	public void unbufferMesh(rocktree_t.node_t.mesh_t mesh)
 	{
-		mesh.computeBufferIndices.Dispose();
-		mesh.computeBufferVertex.Dispose();
-		Destroy(mesh.texture);
+		if (mesh.computeBufferIndices!=null) mesh.computeBufferIndices.Dispose();
+		if (mesh.computeBufferVertex!=null) mesh.computeBufferVertex.Dispose();
+		if (mesh.texture!=null) Destroy(mesh.texture);
 	}
 
 	private int nbSimultaneous = 0;

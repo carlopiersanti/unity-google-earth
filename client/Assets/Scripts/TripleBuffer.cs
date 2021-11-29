@@ -1,4 +1,5 @@
 using FFmpeg;
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
@@ -7,7 +8,8 @@ namespace FFmpeg
 {
     public class TripleBuffer
     {
-        private SortedDictionary<string, rocktree_t.node_t>[] buffer = new SortedDictionary<string, rocktree_t.node_t>[3];
+        private Tuple<Dictionary<string, rocktree_t.bulk_t>, SortedDictionary<string, rocktree_t.node_t>>[] buffer =
+            new Tuple<Dictionary<string, rocktree_t.bulk_t>, SortedDictionary<string, rocktree_t.node_t>>[3];
 
         private int WriteIndex;
         private int ReadIndex;
@@ -25,9 +27,9 @@ namespace FFmpeg
             IsBufferAvailable = false;
         }
 
-        public SortedDictionary<string, rocktree_t.node_t> GetWriteBuffer() => buffer[WriteIndex];
+        public Tuple<Dictionary<string, rocktree_t.bulk_t>, SortedDictionary<string, rocktree_t.node_t>> GetWriteBuffer() => buffer[WriteIndex];
 
-        public void SwapWriteBuffer(SortedDictionary<string, rocktree_t.node_t> buffer)
+        public void SwapWriteBuffer(Tuple<Dictionary<string, rocktree_t.bulk_t>, SortedDictionary<string, rocktree_t.node_t>> buffer)
         {
             this.buffer[WriteIndex] = buffer;
             int tmp = WriteIndex;
@@ -39,7 +41,7 @@ namespace FFmpeg
             }
         }
 
-        public SortedDictionary<string, rocktree_t.node_t> GetReadBuffer()
+        public Tuple<Dictionary<string, rocktree_t.bulk_t>, SortedDictionary<string, rocktree_t.node_t>> GetReadBuffer()
         {
             lock (lockObject)
             {
