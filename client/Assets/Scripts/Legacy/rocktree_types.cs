@@ -95,6 +95,8 @@ public class rocktree_t
 			public bool buffering = false;
 
 			public Texture2D texture;
+
+			public string path;
 		};
 		public List<mesh_t> meshes = new List<mesh_t>();
 	};

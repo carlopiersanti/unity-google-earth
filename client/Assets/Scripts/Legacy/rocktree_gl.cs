@@ -24,12 +24,15 @@ public class rocktree_gl : MonoBehaviour
 
 
 
-	public void bufferMesh(rocktree_t.node_t.mesh_t mesh)
+	public void bufferMesh(string path, rocktree_t.node_t.mesh_t mesh)
 	{
 		lock (meshToBuffer)
         {
 			if (!meshToBuffer.Contains(mesh))
+            {
+				mesh.path = path;
 				meshToBuffer.Insert(0, mesh);
+			}
 		}
 	}
 
@@ -43,8 +46,13 @@ public class rocktree_gl : MonoBehaviour
 			{
 				if (meshToBuffer.Count == 0)
 					return;
+
 				mesh = meshToBuffer[0];
-				meshToBuffer.RemoveAt(0);
+
+				for (int i = 1; i < meshToBuffer.Count; i++)
+					mesh = mesh.path.Length <= meshToBuffer[i].path.Length ? mesh : meshToBuffer[i];
+
+				meshToBuffer.Remove(mesh);
 			}
 
 			mesh.buffering = true;

@@ -477,7 +477,7 @@ public class main : MonoBehaviour
 				throw new Exception("INTERNAL ERROR");
 			if (node.dl_state.Value != dl_state.dl_state_downloaded) continue;
 			
-			node.meshes.ForEach(m => { if (!m.buffering && !m.buffered) { gl.bufferMesh(m); } });
+			node.meshes.ForEach(m => { if (!m.buffering && !m.buffered) { gl.bufferMesh(full_path, m); } });
 
 			if (node.meshes.Any(m => !m.buffered))
 			{
