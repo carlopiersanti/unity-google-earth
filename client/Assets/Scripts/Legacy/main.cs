@@ -12,6 +12,7 @@ public class main : MonoBehaviour
 {
 	[SerializeField] public Camera mainCamera;
 	[SerializeField] public Material tileMaterial;
+	[SerializeField] rocktree_gl gl;
 
 	static rocktree_t _planetoid = null;
 
@@ -402,7 +403,7 @@ public class main : MonoBehaviour
 				var n = kv.Value;
 				if (n.dl_state.Value != dl_state.dl_state_downloaded) continue;
 
-				if (n.meshes.Any( m => m.buffering)) continue;
+				if (n.meshes.Any( m => m.buffering && !m.buffered)) continue;
 
 				// just count buffers
 				foreach (var m in n.meshes) { if (m.buffered) { buf_cnt++; break; } }
@@ -420,7 +421,7 @@ public class main : MonoBehaviour
 					{
 						if (mesh.buffered)
 						{
-							GetComponent<rocktree_gl>().unbufferMesh(mesh);
+							gl.unbufferMesh(mesh);
 						}
 					}
 					// clean up
@@ -475,6 +476,13 @@ public class main : MonoBehaviour
 			if (!node.can_have_data)
 				throw new Exception("INTERNAL ERROR");
 			if (node.dl_state.Value != dl_state.dl_state_downloaded) continue;
+			
+			node.meshes.ForEach(m => { if (!m.buffering && !m.buffered) { gl.bufferMesh(m); } });
+
+			if (node.meshes.Any(m => !m.buffered))
+			{
+				continue;
+			}
 
 			// set octant mask of previous node
 			int octant = (int)(full_path[level - 1] - '0');
@@ -516,13 +524,8 @@ public class main : MonoBehaviour
 			// buffer, bind, draw
 			foreach (var mesh in node.meshes)
 			{
-				UnityEngine.Profiling.Profiler.BeginSample("003");
-				if (!mesh.buffering) GetComponent<rocktree_gl>().bufferMesh(mesh);
-				UnityEngine.Profiling.Profiler.EndSample();
-
-				UnityEngine.Profiling.Profiler.BeginSample("004");
-				if (mesh.buffered) GetComponent<rocktree_gl>().bindAndDrawMesh(mainCamera, tileMaterial, mesh, transform_float, mask_map[full_path]);
-				UnityEngine.Profiling.Profiler.EndSample();
+				//if (!mesh.buffering) GetComponent<rocktree_gl>().bufferMesh(mesh);
+				if (mesh.buffered) gl.bindAndDrawMesh(mainCamera, tileMaterial, mesh, transform_float, mask_map[full_path]);
 			}
 			//bufs[full_path] = node;
 		}
