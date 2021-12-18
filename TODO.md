@@ -1,3 +1,4 @@
+- Using plugins for asynchronous loading does not guarantee stability, they need to be replaced with a time budgeted allocator
 - Clean and performant unbuffer with pooling
 - Stress tests
 - Cleanup code
