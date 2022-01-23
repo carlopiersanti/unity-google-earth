@@ -38,7 +38,8 @@ public class rocktree_gl : MonoBehaviour
 
     private void Update()
     {
-		while (nbSimultaneous < maxNbSimultaneous)
+		//while (nbSimultaneous < maxNbSimultaneous)
+		while (true)
 		{
 			rocktree_t.node_t.mesh_t mesh;
 
@@ -61,41 +62,23 @@ public class rocktree_gl : MonoBehaviour
 			mesh.computeBufferIndices = new ComputeBuffer(mesh.indices.Length, sizeof(int));
 			mesh.computeBufferVertex = new ComputeBuffer(mesh.vertices.Length, vertex_t.SizeOf());
 
-			/*mesh.computeBufferIndices.SetData(mesh.indices);
-			mesh.computeBufferVertex.SetData(mesh.vertices);*/
-
-			GCHandle pinnedData = GCHandle.Alloc(mesh.texture_Data, GCHandleType.Pinned);
-			GCHandle pinnedIndices = GCHandle.Alloc(mesh.indices, GCHandleType.Pinned);
-			GCHandle pinnedVertices = GCHandle.Alloc(mesh.vertices, GCHandleType.Pinned);
-
+			mesh.computeBufferIndices.SetData(mesh.indices);
+			mesh.computeBufferVertex.SetData(mesh.vertices);
 
 			if (mesh.texture_format == rocktree_t.texture_format.texture_format_rgb)
 			{
-				TextureLoader.Instance.LoadAsync(
-					pinnedData.AddrOfPinnedObject(), mesh.texture_width, mesh.texture_height,
-					mesh.computeBufferIndices.GetNativeBufferPtr(), pinnedIndices.AddrOfPinnedObject(), mesh.indices.Length * sizeof(int),
-					mesh.computeBufferVertex.GetNativeBufferPtr(), pinnedVertices.AddrOfPinnedObject(), mesh.vertices.Length * vertex_t.SizeOf(),
-					(texture) =>
-					{
-						mesh.texture = texture.ToUnityTexture2D();
-						pinnedData.Free();
-						pinnedIndices.Free();
-						pinnedVertices.Free();
-						nbSimultaneous--;
-						mesh.buffered = true;
-					}, () =>
-					{
-						pinnedData.Free();
-						pinnedIndices.Free();
-						pinnedVertices.Free();
-						nbSimultaneous--;
-						Debug.LogError("Load Failed : ");
-					});
+				mesh.texture = new UnityEngine.Texture2D(mesh.texture_width, mesh.texture_height, TextureFormat.RGBA32, false);
+				mesh.texture.LoadRawTextureData(mesh.texture_Data);
+				mesh.texture.Apply();
+				mesh.buffered = true;
+				nbSimultaneous--;
 			}
 			else if (mesh.texture_format == rocktree_t.texture_format.texture_format_dxt1)
 			{
 				Debug.LogError("NOT OPTIMIZED TEXTURE FORMAT, THIS COULD CAUSE LAGS");
 				mesh.texture = new UnityEngine.Texture2D(mesh.texture_width, mesh.texture_height, TextureFormat.DXT1Crunched, false);
+				mesh.texture.LoadRawTextureData(mesh.texture_Data);
+				mesh.texture.Apply();
 				mesh.buffered = true;
 				nbSimultaneous--;
 			}
